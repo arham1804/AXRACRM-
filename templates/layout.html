@@ -70,6 +70,13 @@
                             <span class="badge badge-pill bg-danger notification-counter position-absolute end-0 me-3">0</span>
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'communication' in request.endpoint %}active{% endif %}" 
+                           href="{{ url_for('communication_templates') }}">
+                            <i data-feather="message-square"></i>
+                            <span class="ms-2">Communication</span>
+                        </a>
+                    </li>
                     <li class="nav-item mt-5">
                         <a class="nav-link text-danger" href="{{ url_for('logout') }}">
                             <i data-feather="log-out"></i>
