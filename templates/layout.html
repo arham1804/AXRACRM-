@@ -166,6 +166,17 @@
                                     <li><a class="dropdown-item" href="{{ url_for('dashboard') }}">
                                         <i data-feather="home" class="feather-sm me-2"></i> Dashboard
                                     </a></li>
+                                    <li>
+                                        <div class="dropdown-item">
+                                            <div class="form-check form-switch d-flex align-items-center ps-0">
+                                                <label class="form-check-label me-auto d-flex align-items-center" for="darkModeSwitch">
+                                                    <i data-feather="moon" class="feather-sm me-2 theme-icon"></i>
+                                                    Dark Mode
+                                                </label>
+                                                <input class="form-check-input" type="checkbox" id="darkModeSwitch">
+                                            </div>
+                                        </div>
+                                    </li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
                                         <i data-feather="log-out" class="feather-sm me-2"></i> Logout
@@ -177,17 +188,64 @@
                 </nav>
                 {% endif %}
                 
-                <!-- Flash messages -->
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-                {% endwith %}
+                <!-- Flash messages - Will also be shown as toast notifications -->
+                <div id="flashMessages" class="d-none">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} alert-dismissible fade show my-2" role="alert" data-category="{{ category }}">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                </div>
+                
+                <!-- Script to convert flash messages to toast notifications -->
+                <script>
+                    $(document).ready(function() {
+                        // Only run if toastNotification is available
+                        if (typeof window.toastNotification !== 'undefined') {
+                            $('#flashMessages .alert').each(function() {
+                                var category = $(this).data('category');
+                                var message = $(this).text().trim();
+                                
+                                // Map Flask categories to toast types
+                                var toastType = 'info';
+                                var title = 'Notification';
+                                
+                                switch(category) {
+                                    case 'success':
+                                        toastType = 'success';
+                                        title = 'Success';
+                                        break;
+                                    case 'danger':
+                                    case 'error':
+                                        toastType = 'error';
+                                        title = 'Error';
+                                        break;
+                                    case 'warning':
+                                        toastType = 'warning';
+                                        title = 'Warning';
+                                        break;
+                                    case 'info':
+                                    default:
+                                        toastType = 'info';
+                                        title = 'Information';
+                                        break;
+                                }
+                                
+                                // Show toast
+                                toastNotification.show({
+                                    title: title,
+                                    message: message,
+                                    type: toastType
+                                });
+                            });
+                        }
+                    });
+                </script>
                 
                 <!-- Page content -->
                 {% block content %}{% endblock %}
@@ -222,6 +280,7 @@
     
     <!-- Custom Scripts -->
     <script src="{{ url_for('static', filename='js/formValidation.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/toastNotification.js') }}"></script>
 
     <!-- Mobile sidebar toggle -->
     <script>
@@ -256,71 +315,111 @@
         $(document).ready(function() {
             // Function to fetch and update notifications
             function fetchNotifications() {
-                $.get('/api/notifications/unread', function(data) {
-                    // Update counter
-                    $('.notification-counter').text(data.count);
-                    
-                    // Update dropdown content
-                    let notificationHtml = '';
-                    
-                    if (data.notifications.length === 0) {
-                        notificationHtml = `
+                $.ajax({
+                    url: '/api/notifications/unread',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(data) {
+                        // If data is null or undefined, create default empty structure
+                        if (!data) {
+                            data = { count: 0, notifications: [] };
+                        }
+                        
+                        // Ensure notifications array exists
+                        if (!data.notifications) {
+                            data.notifications = [];
+                        }
+                        
+                        // Ensure count exists
+                        if (typeof data.count === 'undefined') {
+                            data.count = data.notifications.length || 0;
+                        }
+                        
+                        // Update counter
+                        $('.notification-counter').text(data.count);
+                        
+                        // Hide counter if zero
+                        if (data.count === 0) {
+                            $('.notification-counter').addClass('d-none');
+                        } else {
+                            $('.notification-counter').removeClass('d-none');
+                        }
+                        
+                        // Update dropdown content
+                        let notificationHtml = '';
+                        
+                        if (data.notifications.length === 0) {
+                            notificationHtml = `
+                                <li class="text-center p-3">
+                                    <span class="text-muted">No new notifications</span>
+                                </li>
+                            `;
+                        } else {
+                            // Sort notifications - urgent first
+                            data.notifications.sort(function(a, b) {
+                                if (a.is_urgent && !b.is_urgent) return -1;
+                                if (!a.is_urgent && b.is_urgent) return 1;
+                                return new Date(b.created_at) - new Date(a.created_at);
+                            });
+                            
+                            $.each(data.notifications, function(i, notification) {
+                                if (i >= 5) return false; // Show only 5 notifications in dropdown
+                                
+                                const iconClass = notification.is_urgent ? 'text-danger' : 'text-primary';
+                                const icon = notification.is_urgent ? 'alert-circle' : 'bell';
+                                const message = notification.message || '';
+                                const title = notification.title || 'Notification';
+                                const created_at = notification.created_at || '';
+                                
+                                notificationHtml += `
+                                    <li>
+                                        <a class="dropdown-item py-2 border-bottom" href="{{ url_for('notifications') }}">
+                                            <div class="d-flex align-items-center">
+                                                <div class="me-3">
+                                                    <i data-feather="${icon}" class="${iconClass}"></i>
+                                                </div>
+                                                <div class="notification-content">
+                                                    <div class="fw-bold">${title}</div>
+                                                    <div class="small text-muted">${message.length > 60 ? message.substring(0, 60) + '...' : message}</div>
+                                                    <div class="small text-muted">${created_at}</div>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </li>
+                                `;
+                            });
+                            
+                            if (data.notifications.length > 5) {
+                                notificationHtml += `
+                                    <li>
+                                        <div class="text-center p-2">
+                                            <a href="{{ url_for('notifications') }}" class="btn btn-sm btn-primary">
+                                                View all ${data.count} notifications
+                                            </a>
+                                        </div>
+                                    </li>
+                                `;
+                            }
+                        }
+                        
+                        $('#notification-items').html(notificationHtml);
+                        feather.replace(); // Re-initialize feather icons
+                    },
+                    error: function(xhr, status, error) {
+                        console.log("Error fetching notifications:", error);
+                        // Don't show error to user, just set empty state
+                        $('#notification-items').html(`
                             <li class="text-center p-3">
                                 <span class="text-muted">No new notifications</span>
                             </li>
-                        `;
-                    } else {
-                        // Sort notifications - urgent first
-                        data.notifications.sort((a, b) => {
-                            if (a.is_urgent && !b.is_urgent) return -1;
-                            if (!a.is_urgent && b.is_urgent) return 1;
-                            return new Date(b.created_at) - new Date(a.created_at);
-                        });
-                        
-                        $.each(data.notifications, function(i, notification) {
-                            if (i >= 5) return false; // Show only 5 notifications in dropdown
-                            
-                            const iconClass = notification.is_urgent ? 'text-danger' : 'text-primary';
-                            const icon = notification.is_urgent ? 'alert-circle' : 'bell';
-                            
-                            notificationHtml += `
-                                <li>
-                                    <a class="dropdown-item py-2 border-bottom" href="{{ url_for('notifications') }}">
-                                        <div class="d-flex align-items-center">
-                                            <div class="me-3">
-                                                <i data-feather="${icon}" class="${iconClass}"></i>
-                                            </div>
-                                            <div class="notification-content">
-                                                <div class="fw-bold">${notification.title}</div>
-                                                <div class="small text-muted">${notification.message.length > 60 ? notification.message.substring(0, 60) + '...' : notification.message}</div>
-                                                <div class="small text-muted">${notification.created_at}</div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </li>
-                            `;
-                        });
-                        
-                        if (data.notifications.length > 5) {
-                            notificationHtml += `
-                                <li>
-                                    <div class="text-center p-2">
-                                        <a href="{{ url_for('notifications') }}" class="btn btn-sm btn-primary">
-                                            View all ${data.count} notifications
-                                        </a>
-                                    </div>
-                                </li>
-                            `;
-                        }
+                        `);
+                        $('.notification-counter').text('0').addClass('d-none');
                     }
-                    
-                    $('#notification-items').html(notificationHtml);
-                    feather.replace(); // Re-initialize feather icons
                 });
             }
             
-            // Initial fetch
-            fetchNotifications();
+            // Initial fetch with slight delay to ensure DOM is ready
+            setTimeout(fetchNotifications, 500);
             
             // Refresh every 30 seconds
             setInterval(fetchNotifications, 30000);
@@ -329,6 +428,61 @@
             $('#notificationDropdown').on('show.bs.dropdown', function() {
                 fetchNotifications();
             });
+        });
+    </script>
+    
+    <!-- Dark Mode Toggle -->
+    <script>
+        $(document).ready(function() {
+            // Check for saved theme preference or use preferred color scheme
+            const savedTheme = localStorage.getItem('theme');
+            const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            // Set theme based on saved preference or system preference
+            if (savedTheme) {
+                // Apply saved theme
+                document.documentElement.setAttribute('data-bs-theme', savedTheme);
+                // Update switch state
+                $('#darkModeSwitch').prop('checked', savedTheme === 'dark');
+                // Update theme icon
+                updateThemeIcon(savedTheme);
+            } else if (systemPrefersDark) {
+                // Apply dark theme based on system preference
+                document.documentElement.setAttribute('data-bs-theme', 'dark');
+                // Update switch state
+                $('#darkModeSwitch').prop('checked', true);
+                // Update theme icon
+                updateThemeIcon('dark');
+            }
+            
+            // Listen for toggle changes
+            $('#darkModeSwitch').on('change', function() {
+                const theme = this.checked ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-bs-theme', theme);
+                localStorage.setItem('theme', theme);
+                updateThemeIcon(theme);
+            });
+            
+            // Function to update theme icon
+            function updateThemeIcon(theme) {
+                const icon = theme === 'dark' ? 'moon' : 'sun';
+                const labelElem = $('label[for="darkModeSwitch"]');
+                
+                // Remove existing icon
+                labelElem.find('svg').remove();
+                
+                // Add new icon
+                labelElem.prepend(feather.icons[icon].toSvg({ class: 'feather-sm me-2 theme-icon' }));
+                
+                // Update text
+                const modeText = theme === 'dark' ? 'Dark Mode' : 'Light Mode';
+                labelElem.contents().filter(function() {
+                    return this.nodeType === 3; // Text node
+                }).replaceWith(modeText);
+                
+                // Reinitialize feather icons
+                feather.replace();
+            }
         });
     </script>
     
