@@ -297,5 +297,35 @@
 {% endblock %}
 
 {% block scripts %}
+<!-- Chart.js library first -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+<!-- Dashboard scripts -->
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+
+<!-- Initialize charts after DOM is fully loaded -->
+<script>
+    $(document).ready(function() {
+        // Make sure Chart.js is loaded before initializing
+        if (typeof Chart !== 'undefined') {
+            console.log('Chart.js is loaded, initializing charts...');
+            
+            try {
+                // Initialize page if not already done
+                if (typeof initializePage === 'function') {
+                    if (!window.dashboardInitialized) {
+                        window.dashboardInitialized = true;
+                        initializePage();
+                    }
+                } else {
+                    console.error('initializePage function not found');
+                }
+            } catch (error) {
+                console.error('Error initializing dashboard charts:', error);
+            }
+        } else {
+            console.error('Chart.js library not loaded!');
+        }
+    });
+</script>
 {% endblock %}

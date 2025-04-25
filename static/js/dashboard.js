@@ -34,211 +34,332 @@ $(document).ready(function() {
 
 // Lead Status Chart
 function initLeadStatusChart() {
-    const ctx = document.getElementById('leadStatusChart');
-    if (!ctx) return;
-    
-    const leadData = JSON.parse(ctx.getAttribute('data-stats'));
-    
-    new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['New', 'Assigned', 'Converted', 'Lost'],
-            datasets: [{
-                data: [
-                    leadData.new || 0,
-                    leadData.assigned || 0,
-                    leadData.converted || 0,
-                    leadData.lost || 0
-                ],
-                backgroundColor: [
-                    '#0dcaf0', // info
-                    '#ffc107', // warning
-                    '#198754', // success
-                    '#dc3545'  // danger
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        color: '#f8f9fa' // light text color for dark theme
+    try {
+        const ctx = document.getElementById('leadStatusChart');
+        if (!ctx) {
+            console.warn('Lead status chart element not found');
+            return;
+        }
+        
+        const statsAttr = ctx.getAttribute('data-stats');
+        if (!statsAttr) {
+            console.warn('No data-stats attribute found on lead status chart');
+            return;
+        }
+        
+        // Safely parse JSON data
+        let leadData;
+        try {
+            leadData = JSON.parse(statsAttr);
+        } catch (e) {
+            console.error('Failed to parse lead status data:', e, statsAttr);
+            leadData = { new: 0, assigned: 0, converted: 0, lost: 0 };
+        }
+        
+        console.log('Lead status data:', leadData);
+        
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['New', 'Assigned', 'Converted', 'Lost'],
+                datasets: [{
+                    data: [
+                        leadData.new || 0,
+                        leadData.assigned || 0,
+                        leadData.converted || 0,
+                        leadData.lost || 0
+                    ],
+                    backgroundColor: [
+                        '#0dcaf0', // info
+                        '#ffc107', // warning
+                        '#198754', // success
+                        '#dc3545'  // danger
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#f8f9fa' // light text color for dark theme
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Lead Status Distribution',
+                        color: '#f8f9fa'
                     }
-                },
-                title: {
-                    display: true,
-                    text: 'Lead Status Distribution',
-                    color: '#f8f9fa'
                 }
             }
-        }
-    });
+        });
+        
+        console.log('Lead status chart initialized');
+    } catch (error) {
+        console.error('Error initializing lead status chart:', error);
+    }
 }
 
 // Assignment Status Chart
 function initAssignmentStatusChart() {
-    const ctx = document.getElementById('assignmentStatusChart');
-    if (!ctx) return;
-    
-    const assignmentData = JSON.parse(ctx.getAttribute('data-stats'));
-    
-    new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Pending', 'Demo Scheduled', 'Converted', 'Cancelled'],
-            datasets: [{
-                data: [
-                    assignmentData.pending || 0,
-                    assignmentData.demo_scheduled || 0,
-                    assignmentData.converted || 0,
-                    assignmentData.cancelled || 0
-                ],
-                backgroundColor: [
-                    '#6c757d', // secondary
-                    '#0d6efd', // primary
-                    '#198754', // success
-                    '#dc3545'  // danger
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        color: '#f8f9fa' // light text color for dark theme
+    try {
+        const ctx = document.getElementById('assignmentStatusChart');
+        if (!ctx) {
+            console.warn('Assignment status chart element not found');
+            return;
+        }
+        
+        const statsAttr = ctx.getAttribute('data-stats');
+        if (!statsAttr) {
+            console.warn('No data-stats attribute found on assignment status chart');
+            return;
+        }
+        
+        // Safely parse JSON data
+        let assignmentData;
+        try {
+            assignmentData = JSON.parse(statsAttr);
+        } catch (e) {
+            console.error('Failed to parse assignment status data:', e, statsAttr);
+            assignmentData = { pending: 0, demo_scheduled: 0, converted: 0, cancelled: 0 };
+        }
+        
+        console.log('Assignment status data:', assignmentData);
+        
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Pending', 'Demo Scheduled', 'Converted', 'Cancelled'],
+                datasets: [{
+                    data: [
+                        assignmentData.pending || 0,
+                        assignmentData.demo_scheduled || 0,
+                        assignmentData.converted || 0,
+                        assignmentData.cancelled || 0
+                    ],
+                    backgroundColor: [
+                        '#6c757d', // secondary
+                        '#0d6efd', // primary
+                        '#198754', // success
+                        '#dc3545'  // danger
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#f8f9fa' // light text color for dark theme
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Assignment Status Distribution',
+                        color: '#f8f9fa'
                     }
-                },
-                title: {
-                    display: true,
-                    text: 'Assignment Status Distribution',
-                    color: '#f8f9fa'
                 }
             }
-        }
-    });
+        });
+        
+        console.log('Assignment status chart initialized');
+    } catch (error) {
+        console.error('Error initializing assignment status chart:', error);
+    }
 }
 
 // Demo Status Chart
 function initDemoStatusChart() {
-    const ctx = document.getElementById('demoStatusChart');
-    if (!ctx) return;
-    
-    const demoData = JSON.parse(ctx.getAttribute('data-stats'));
-    
-    new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Scheduled', 'Completed', 'Cancelled'],
-            datasets: [{
-                data: [
-                    demoData.scheduled || 0,
-                    demoData.completed || 0,
-                    demoData.cancelled || 0
-                ],
-                backgroundColor: [
-                    '#0d6efd', // primary
-                    '#198754', // success
-                    '#dc3545'  // danger
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        color: '#f8f9fa' // light text color for dark theme
+    try {
+        const ctx = document.getElementById('demoStatusChart');
+        if (!ctx) {
+            console.warn('Demo status chart element not found');
+            return;
+        }
+        
+        const statsAttr = ctx.getAttribute('data-stats');
+        if (!statsAttr) {
+            console.warn('No data-stats attribute found on demo status chart');
+            return;
+        }
+        
+        // Safely parse JSON data
+        let demoData;
+        try {
+            demoData = JSON.parse(statsAttr);
+        } catch (e) {
+            console.error('Failed to parse demo status data:', e, statsAttr);
+            demoData = { scheduled: 0, completed: 0, cancelled: 0 };
+        }
+        
+        console.log('Demo status data:', demoData);
+        
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Scheduled', 'Completed', 'Cancelled'],
+                datasets: [{
+                    data: [
+                        demoData.scheduled || 0,
+                        demoData.completed || 0,
+                        demoData.cancelled || 0
+                    ],
+                    backgroundColor: [
+                        '#0d6efd', // primary
+                        '#198754', // success
+                        '#dc3545'  // danger
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#f8f9fa' // light text color for dark theme
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Demo Status Distribution',
+                        color: '#f8f9fa'
                     }
-                },
-                title: {
-                    display: true,
-                    text: 'Demo Status Distribution',
-                    color: '#f8f9fa'
                 }
             }
-        }
-    });
+        });
+        
+        console.log('Demo status chart initialized');
+    } catch (error) {
+        console.error('Error initializing demo status chart:', error);
+    }
 }
 
 // Monthly Trends Chart
 function initMonthlyTrendsChart() {
-    const ctx = document.getElementById('monthlyTrendsChart');
-    if (!ctx) return;
-    
-    const months = JSON.parse(ctx.getAttribute('data-months'));
-    const leads = JSON.parse(ctx.getAttribute('data-leads'));
-    const conversions = JSON.parse(ctx.getAttribute('data-conversions'));
-    
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: months,
-            datasets: [
-                {
-                    label: 'New Leads',
-                    data: leads,
-                    borderColor: '#0dcaf0', // info
-                    backgroundColor: 'rgba(13, 202, 240, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.2
-                },
-                {
-                    label: 'Conversions',
-                    data: conversions,
-                    borderColor: '#198754', // success
-                    backgroundColor: 'rgba(25, 135, 84, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.2
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'top',
-                    labels: {
-                        color: '#f8f9fa' // light text color for dark theme
+    try {
+        const ctx = document.getElementById('monthlyTrendsChart');
+        if (!ctx) {
+            console.warn('Monthly trends chart element not found');
+            return;
+        }
+        
+        // Safely parse months data
+        let months;
+        try {
+            const monthsAttr = ctx.getAttribute('data-months');
+            if (!monthsAttr) {
+                console.warn('No data-months attribute found on monthly trends chart');
+                return;
+            }
+            months = JSON.parse(monthsAttr);
+        } catch (e) {
+            console.error('Failed to parse months data:', e);
+            months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+        }
+        
+        // Safely parse leads data
+        let leads;
+        try {
+            const leadsAttr = ctx.getAttribute('data-leads');
+            if (!leadsAttr) {
+                console.warn('No data-leads attribute found on monthly trends chart');
+                return;
+            }
+            leads = JSON.parse(leadsAttr);
+        } catch (e) {
+            console.error('Failed to parse leads data:', e);
+            leads = [0, 0, 0, 0, 0, 0];
+        }
+        
+        // Safely parse conversions data
+        let conversions;
+        try {
+            const conversionsAttr = ctx.getAttribute('data-conversions');
+            if (!conversionsAttr) {
+                console.warn('No data-conversions attribute found on monthly trends chart');
+                return;
+            }
+            conversions = JSON.parse(conversionsAttr);
+        } catch (e) {
+            console.error('Failed to parse conversions data:', e);
+            conversions = [0, 0, 0, 0, 0, 0];
+        }
+        
+        console.log('Monthly trends data:', { months, leads, conversions });
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [
+                    {
+                        label: 'New Leads',
+                        data: leads,
+                        borderColor: '#0dcaf0', // info
+                        backgroundColor: 'rgba(13, 202, 240, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.2
+                    },
+                    {
+                        label: 'Conversions',
+                        data: conversions,
+                        borderColor: '#198754', // success
+                        backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.2
                     }
-                },
-                title: {
-                    display: true,
-                    text: 'Monthly Lead and Conversion Trends',
-                    color: '#f8f9fa'
-                }
+                ]
             },
-            scales: {
-                x: {
-                    grid: {
-                        color: 'rgba(255, 255, 255, 0.1)'
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: '#f8f9fa' // light text color for dark theme
+                        }
                     },
-                    ticks: {
+                    title: {
+                        display: true,
+                        text: 'Monthly Lead and Conversion Trends',
                         color: '#f8f9fa'
                     }
                 },
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: 'rgba(255, 255, 255, 0.1)'
+                scales: {
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#f8f9fa'
+                        }
                     },
-                    ticks: {
-                        precision: 0,
-                        color: '#f8f9fa'
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            precision: 0,
+                            color: '#f8f9fa'
+                        }
                     }
                 }
             }
-        }
-    });
+        });
+        
+        console.log('Monthly trends chart initialized');
+    } catch (error) {
+        console.error('Error initializing monthly trends chart:', error);
+    }
 }
 
 // Setup refresh button
