@@ -4,112 +4,16 @@
 .navbar-brand {
     font-weight: bold;
     font-size: 1.5rem;
-    background: linear-gradient(45deg, #6a11cb, #2575fc);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
 }
 
 /* Dashboard card styling */
 .dashboard-card {
-    border-radius: 0.75rem;
-    transition: all 0.3s ease;
-    border: none;
-    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.05);
-    overflow: hidden;
-    backdrop-filter: blur(10px);
-    background: rgba(255, 255, 255, 0.95);
-}
-
-.dark-mode .dashboard-card {
-    background: rgba(33, 37, 41, 0.95);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    border-radius: 0.5rem;
+    transition: transform 0.3s ease;
 }
 
 .dashboard-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-}
-
-/* Modern stat card styles */
-.stat-card {
-    border-radius: 1rem;
-    padding: 1.5rem;
-    border: none;
-    background: white;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-}
-
-.stat-card .indicator {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    opacity: 0.6;
-}
-
-.stat-card .title {
-    font-size: 1rem;
-    color: #6c757d;
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-}
-
-.stat-card .value {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-}
-
-.stat-card .change {
-    font-size: 0.9rem;
-    font-weight: 600;
-}
-
-.stat-card .change.positive {
-    color: #28a745;
-}
-
-.stat-card .change.negative {
-    color: #dc3545;
-}
-
-/* Progress bars for sources */
-.source-progress {
-    height: 10px;
-    border-radius: 5px;
-    margin-bottom: 0.75rem;
-}
-
-.source-container {
-    margin-bottom: 0.5rem;
-}
-
-.source-label {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 0.25rem;
-    font-weight: 500;
-}
-
-/* Modern dashboard theme */
-.dashboard-modern {
-    background: linear-gradient(145deg, #f8f9fa, #f1f3f5);
-    min-height: 100vh;
-}
-
-.dark-mode .dashboard-modern {
-    background: linear-gradient(145deg, #212529, #343a40);
 }
 
 /* Form styling */
