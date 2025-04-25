@@ -579,6 +579,220 @@
         feather.replace();
     </script>
     
+    <!-- Theme Toggle Script -->
+    <script>
+        $(document).ready(function() {
+            // Check for saved theme preference or default to dark mode
+            const currentTheme = localStorage.getItem('theme') || 'dark';
+            applyTheme(currentTheme);
+            
+            // Update the toggle button icon
+            updateThemeIcon(currentTheme);
+            
+            // Theme toggle button click handler
+            $('#themeToggle').click(function() {
+                const currentTheme = $('body').hasClass('dark-mode') ? 'dark' : 'light';
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                
+                applyTheme(newTheme);
+                updateThemeIcon(newTheme);
+                localStorage.setItem('theme', newTheme);
+                
+                // Update preference in settings modal if open
+                $('#darkModePreference').prop('checked', newTheme === 'dark');
+            });
+            
+            // Settings modal preference change
+            $('#darkModePreference').change(function() {
+                const newTheme = $(this).is(':checked') ? 'dark' : 'light';
+                
+                applyTheme(newTheme);
+                updateThemeIcon(newTheme);
+                localStorage.setItem('theme', newTheme);
+            });
+            
+            // Function to apply theme
+            function applyTheme(theme) {
+                if (theme === 'dark') {
+                    $('body').addClass('dark-mode');
+                    $('.card').addClass('bg-dark text-light border-secondary');
+                    $('.table').addClass('table-dark');
+                    $('.modal-content').addClass('bg-dark text-light');
+                    $('.form-control, .form-select').addClass('bg-secondary text-light border-dark');
+                } else {
+                    $('body').removeClass('dark-mode');
+                    $('.card').removeClass('bg-dark text-light border-secondary');
+                    $('.table').removeClass('table-dark');
+                    $('.modal-content').removeClass('bg-dark text-light');
+                    $('.form-control, .form-select').removeClass('bg-secondary text-light border-dark');
+                }
+            }
+            
+            // Function to update theme toggle icon
+            function updateThemeIcon(theme) {
+                const icon = theme === 'dark' ? 'sun' : 'moon';
+                $('#themeToggle').find('svg').remove();
+                $('#themeToggle').prepend(feather.icons[icon].toSvg());
+                feather.replace();
+            }
+        });
+    </script>
+    
+    <!-- Keyboard Shortcuts Script -->
+    <script>
+        $(document).ready(function() {
+            // Keyboard shortcuts
+            $(document).keydown(function(e) {
+                // Skip if inside input fields
+                if ($(e.target).is('input, textarea, select')) return;
+                
+                // Alt + key shortcuts
+                if (e.altKey) {
+                    switch(e.key.toLowerCase()) {
+                        case 'd': // Dashboard
+                            window.location.href = "{{ url_for('dashboard') }}";
+                            break;
+                        case 's': // Student Leads
+                            window.location.href = "{{ url_for('student_leads') }}";
+                            break;
+                        case 't': // Teachers
+                            window.location.href = "{{ url_for('teachers') }}";
+                            break;
+                        case 'a': // Assignments
+                            window.location.href = "{{ url_for('assignments') }}";
+                            break;
+                        case 'n': // Notifications
+                            window.location.href = "{{ url_for('notifications') }}";
+                            break;
+                        case 'm': // Toggle dark mode
+                            $('#themeToggle').click();
+                            break;
+                    }
+                } else if (e.key === '/') { // Global search
+                    e.preventDefault();
+                    $('#globalSearchModal').modal('show');
+                    setTimeout(() => {
+                        $('#globalSearchInput').focus();
+                    }, 500);
+                }
+            });
+            
+            // Global search functionality
+            $('#globalSearchInput').on('keyup', function() {
+                const query = $(this).val().trim().toLowerCase();
+                if (query.length < 2) {
+                    $('#globalSearchResults').html('');
+                    return;
+                }
+                
+                // Show loading indicator
+                $('#globalSearchResults').html('<div class="text-center p-3"><div class="spinner-border spinner-border-sm text-royal-purple" role="status"></div></div>');
+                
+                // Simulate search (replace with actual AJAX call to search API)
+                setTimeout(function() {
+                    // This is a placeholder until we implement actual search - will be replaced with real API call
+                    const mockResults = `
+                        <div class="list-group">
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">Students</h6>
+                                </div>
+                                <a href="#" class="list-group-item list-group-item-action">
+                                    <i data-feather="user" class="feather-sm me-2"></i> Rahul Singh
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action">
+                                    <i data-feather="user" class="feather-sm me-2"></i> Rajat Kumar
+                                </a>
+                            </div>
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">Teachers</h6>
+                                </div>
+                                <a href="#" class="list-group-item list-group-item-action">
+                                    <i data-feather="user-check" class="feather-sm me-2"></i> Rahul Sharma
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                    
+                    $('#globalSearchResults').html(mockResults);
+                    feather.replace();
+                }, 500);
+            });
+            
+            // Support form submission
+            $('#supportForm').submit(function(e) {
+                e.preventDefault();
+                
+                // Simulate form submission (to be replaced with actual API call)
+                $(this).addClass('d-none');
+                $('#supportFormSuccess').removeClass('d-none');
+                
+                // Reset and close after delay
+                setTimeout(function() {
+                    $('#supportForm').removeClass('d-none').trigger('reset');
+                    $('#supportFormSuccess').addClass('d-none');
+                    $('#contactSupportModal').modal('hide');
+                }, 3000);
+            });
+            
+            // Profile form submission
+            $('#profileForm').submit(function(e) {
+                e.preventDefault();
+                
+                // Simulate form submission (to be replaced with actual API call)
+                showToast('Profile updated successfully!');
+                $('#userProfileModal').modal('hide');
+            });
+            
+            // Password form submission
+            $('#passwordForm').submit(function(e) {
+                e.preventDefault();
+                
+                // Validate password match
+                const newPass = $('#newPassword').val();
+                const confirmPass = $('#confirmPassword').val();
+                
+                if (newPass !== confirmPass) {
+                    showToast('Passwords do not match!', 'error');
+                    return;
+                }
+                
+                // Simulate form submission (to be replaced with actual API call)
+                showToast('Password changed successfully!');
+                $(this).trigger('reset');
+                $('#userProfileModal').modal('hide');
+            });
+            
+            // Preferences form submission
+            $('#preferencesForm').submit(function(e) {
+                e.preventDefault();
+                
+                // Save preferences
+                const darkMode = $('#darkModePreference').is(':checked');
+                const emailNotifs = $('#emailNotifications').is(':checked');
+                const notifFreq = $('#notificationFrequency').val();
+                
+                localStorage.setItem('theme', darkMode ? 'dark' : 'light');
+                localStorage.setItem('emailNotifications', emailNotifs);
+                localStorage.setItem('notificationFrequency', notifFreq);
+                
+                // Apply theme if changed
+                const currentTheme = $('body').hasClass('dark-mode') ? 'dark' : 'light';
+                const newTheme = darkMode ? 'dark' : 'light';
+                
+                if (currentTheme !== newTheme) {
+                    applyTheme(newTheme);
+                    updateThemeIcon(newTheme);
+                }
+                
+                // Simulate form submission
+                showToast('Preferences saved successfully!');
+                $('#userProfileModal').modal('hide');
+            });
+        });
+    </script>
+    
     <!-- Custom Scripts -->
     <script src="{{ url_for('static', filename='js/formValidation.js') }}"></script>
 
