@@ -1,6 +1,6 @@
 from app import app, db
 from flask import render_template, redirect, url_for, flash, request, jsonify
-from forms import LoginForm, StudentLeadForm, TeacherForm, AssignTeacherForm, ScheduleDemoForm, FeedbackForm
+from forms import LoginForm, StudentLeadForm, TeacherForm, AssignTeacherForm, ScheduleDemoForm, FeedbackForm, ChangeTeacherForm
 from models import Admin, Student, Teacher, TuitionAssignment, Demo, Feedback
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash

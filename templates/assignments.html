@@ -82,6 +82,11 @@
                                                             <i data-feather="calendar" class="feather-sm me-1"></i> Schedule Demo
                                                         </a>
                                                     </li>
+                                                    <li>
+                                                        <a class="dropdown-item" href="{{ url_for('change_teacher', assignment_id=assignment.id) }}">
+                                                            <i data-feather="refresh-cw" class="feather-sm me-1"></i> Change Teacher
+                                                        </a>
+                                                    </li>
                                                     {% endif %}
                                                     
                                                     {% if assignment.demos %}
@@ -107,6 +112,12 @@
                                                                 <i data-feather="x-circle" class="feather-sm me-1"></i> Mark Demo Cancelled
                                                             </button>
                                                         </form>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li>
+                                                        <a class="dropdown-item" href="{{ url_for('change_teacher', assignment_id=assignment.id) }}">
+                                                            <i data-feather="refresh-cw" class="feather-sm me-1"></i> Change Teacher
+                                                        </a>
                                                     </li>
                                                     {% endif %}
                                                 </ul>
