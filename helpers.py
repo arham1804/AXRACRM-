@@ -183,7 +183,5 @@ def generate_dashboard_stats():
 # Helper function for SQL case statements
 def case(whens, else_=None):
     """Helper for building case statements in SQL"""
-    case_stmt = func.case(whens)
-    if else_ is not None:
-        case_stmt = case_stmt.else_(else_)
-    return case_stmt
+    from sqlalchemy.sql import case
+    return case(whens, else_=else_)
