@@ -112,6 +112,117 @@ body {
     color: white;
 }
 
+/* Animated Progress Indicator */
+.lead-progress-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin: 1.5rem 0;
+    position: relative;
+    z-index: 1;
+}
+
+.lead-progress-container::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    height: 3px;
+    width: 100%;
+    background-color: #e5e7eb;
+    z-index: -1;
+}
+
+.lead-progress-container .progress-line {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    height: 3px;
+    background: linear-gradient(90deg, var(--royal-blue), var(--royal-light-blue));
+    transition: width 1s ease-in-out;
+    z-index: -1;
+}
+
+.lead-progress-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+.lead-progress-step .step-circle {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: white;
+    border: 3px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.lead-progress-step.active .step-circle {
+    border-color: var(--royal-blue);
+    background-color: var(--royal-blue);
+    color: white;
+    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.2);
+}
+
+.lead-progress-step.completed .step-circle {
+    border-color: var(--nawabi-green);
+    background-color: var(--nawabi-green);
+    color: white;
+}
+
+.lead-progress-step .step-title {
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    transition: all 0.3s ease;
+}
+
+.lead-progress-step.active .step-title {
+    color: var(--royal-blue);
+}
+
+.lead-progress-step.completed .step-title {
+    color: var(--nawabi-green);
+}
+
+/* Step pulse animation */
+.lead-progress-step.active .step-circle::before {
+    content: "";
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: var(--royal-blue);
+    opacity: 0;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.5;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0;
+    }
+}
+
 /* Button styling */
 .btn {
     border-radius: 0.5rem;

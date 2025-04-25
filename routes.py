@@ -56,6 +56,12 @@ def student_leads():
         leads = Student.query.order_by(Student.created_at.desc()).all()
     return render_template('student_leads.html', title='Student Leads', leads=leads, current_filter=status_filter)
 
+@app.route('/student-lead/<int:lead_id>')
+@login_required
+def student_detail(lead_id):
+    student = Student.query.get_or_404(lead_id)
+    return render_template('student_detail.html', title=f'Student: {student.name}', student=student)
+
 @app.route('/student-lead/new', methods=['GET', 'POST'])
 @login_required
 def new_student_lead():
