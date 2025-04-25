@@ -172,9 +172,11 @@
                                                     <div class="fw-bold">{{ lead.name if lead is not mapping else lead.get('name', '') }}</div>
                                                     <div class="text-muted small">{{ lead.area if lead is not mapping else lead.get('area', '') }}</div>
                                                 </div>
-                                                {% set lead_id = lead.id if lead is not mapping else lead.get('id') %}
-                                                {% if lead_id %}
+                                                {% set lead_id = lead.id if lead is not mapping and lead.id else lead.get('id') %}
+                                                {% if lead_id and lead_id|string != '' %}
                                                 <a href="{{ url_for('assign_teacher', lead_id=lead_id) }}" class="btn btn-sm btn-primary">Assign</a>
+                                                {% else %}
+                                                <button disabled class="btn btn-sm btn-secondary">Assign</button>
                                                 {% endif %}
                                             </div>
                                             {% endfor %}
@@ -231,14 +233,18 @@
                                                         <td><span class="badge status-{{ (lead.status if lead is not mapping else lead.get('status', '')).lower() }}">{{ lead.status if lead is not mapping else lead.get('status', '') }}</span></td>
                                                         <td>
                                                             {% if (lead.status if lead is not mapping else lead.get('status', '')) == 'New' %}
-                                                                {% set lead_id = lead.id if lead is not mapping else lead.get('id') %}
-                                                                {% if lead_id %}
+                                                                {% set lead_id = lead.id if lead is not mapping and lead.id else lead.get('id') %}
+                                                                {% if lead_id and lead_id|string != '' %}
                                                                 <a href="{{ url_for('assign_teacher', lead_id=lead_id) }}" class="btn btn-sm btn-primary">Assign</a>
+                                                                {% else %}
+                                                                <button disabled class="btn btn-sm btn-secondary">Assign</button>
                                                                 {% endif %}
                                                             {% elif (lead.status if lead is not mapping else lead.get('status', '')) == 'Assigned' %}
-                                                                {% set lead_id = lead.id if lead is not mapping else lead.get('id') %}
-                                                                {% if lead_id %}
+                                                                {% set lead_id = lead.id if lead is not mapping and lead.id else lead.get('id') %}
+                                                                {% if lead_id and lead_id|string != '' %}
                                                                 <a href="{{ url_for('edit_student_lead', lead_id=lead_id) }}" class="btn btn-sm btn-outline-primary">Update</a>
+                                                                {% else %}
+                                                                <button disabled class="btn btn-sm btn-outline-secondary">Update</button>
                                                                 {% endif %}
                                                             {% endif %}
                                                         </td>
