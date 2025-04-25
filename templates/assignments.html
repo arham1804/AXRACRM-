@@ -41,6 +41,7 @@
                                     <th>Teacher Info</th>
                                     <th>Assigned Date</th>
                                     <th>Status</th>
+                                    <th>Progress</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -70,6 +71,27 @@
                                         </td>
                                         <td>{{ assignment.assigned_date.strftime('%Y-%m-%d') }}</td>
                                         <td><span class="badge status-{{ assignment.status|lower|replace(' ', '-') }}">{{ assignment.status }}</span></td>
+                                        <td>
+                                            {% set progress_percentage = 25 %}
+                                            {% if assignment.status == 'Pending' %}
+                                                {% set progress_percentage = 25 %}
+                                            {% elif assignment.status == 'Demo Scheduled' %}
+                                                {% set progress_percentage = 50 %}
+                                            {% elif assignment.status == 'Converted' %}
+                                                {% set progress_percentage = 100 %}
+                                            {% elif assignment.status == 'Cancelled' %}
+                                                {% set progress_percentage = 0 %}
+                                            {% endif %}
+                                            <div class="progress" style="height: 6px; width: 100px;">
+                                                <div class="progress-bar {% if assignment.status == 'Converted' %}bg-success{% elif assignment.status == 'Cancelled' %}bg-danger{% else %}bg-primary{% endif %}" 
+                                                     role="progressbar" 
+                                                     style="width: {{ progress_percentage }}%;" 
+                                                     aria-valuenow="{{ progress_percentage }}" 
+                                                     aria-valuemin="0" 
+                                                     aria-valuemax="100">
+                                                </div>
+                                            </div>
+                                        </td>
                                         <td>
                                             <div class="dropdown">
                                                 <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton{{ assignment.id }}" data-bs-toggle="dropdown" aria-expanded="false">
@@ -127,7 +149,7 @@
                                     {% endfor %}
                                 {% else %}
                                     <tr>
-                                        <td colspan="8" class="text-center">No assignments found</td>
+                                        <td colspan="9" class="text-center">No assignments found</td>
                                     </tr>
                                 {% endif %}
                             </tbody>

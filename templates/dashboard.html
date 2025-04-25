@@ -39,6 +39,54 @@
         </div>
     </div>
     
+    <!-- Lead Status Flow -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card dashboard-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Lead Progression</h5>
+                </div>
+                <div class="card-body">
+                    <div class="lead-progress-container animate">
+                        <div class="progress-line" style="width: 75%"></div>
+                        
+                        <div class="lead-progress-step active" data-status="New">
+                            <div class="step-circle">
+                                <i data-feather="user-plus" width="16" height="16"></i>
+                            </div>
+                            <div class="step-title">New Leads</div>
+                            <div class="mt-2 badge bg-primary-subtle text-primary">{{ stats.lead_status.New|default(0) }}</div>
+                        </div>
+                        
+                        <div class="lead-progress-step active" data-status="Assigned">
+                            <div class="step-circle">
+                                <i data-feather="user-check" width="16" height="16"></i>
+                            </div>
+                            <div class="step-title">Teacher Assigned</div>
+                            <div class="mt-2 badge bg-warning-subtle text-warning">{{ stats.lead_status.Assigned|default(0) }}</div>
+                        </div>
+                        
+                        <div class="lead-progress-step active" data-status="Demo Scheduled">
+                            <div class="step-circle">
+                                <i data-feather="calendar" width="16" height="16"></i>
+                            </div>
+                            <div class="step-title">Demo Scheduled</div>
+                            <div class="mt-2 badge bg-info-subtle text-info">{{ stats.assignment_status['Demo Scheduled']|default(0) }}</div>
+                        </div>
+                        
+                        <div class="lead-progress-step" data-status="Converted">
+                            <div class="step-circle">
+                                <i data-feather="check-circle" width="16" height="16"></i>
+                            </div>
+                            <div class="step-title">Converted</div>
+                            <div class="mt-2 badge bg-success-subtle text-success">{{ stats.lead_status.Converted|default(0) }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Lead Management Section -->
     <div class="row mb-4">
         <div class="col-12">
