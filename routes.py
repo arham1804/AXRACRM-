@@ -69,7 +69,10 @@ def new_student_lead():
             subjects=subjects_json,
             fee=form.fee.data,
             area=form.area.data,
-            gender_preference=form.gender_preference.data
+            gender_preference=form.gender_preference.data,
+            lead_source=form.lead_source.data,
+            referral_name=form.referral_name.data if form.lead_source.data == 'Referral' else None,
+            preferred_timing=form.preferred_timing.data
         )
         db.session.add(student)
         db.session.commit()
@@ -92,6 +95,9 @@ def edit_student_lead(lead_id):
         student.fee = form.fee.data
         student.area = form.area.data
         student.gender_preference = form.gender_preference.data
+        student.lead_source = form.lead_source.data
+        student.referral_name = form.referral_name.data if form.lead_source.data == 'Referral' else None
+        student.preferred_timing = form.preferred_timing.data
         
         db.session.commit()
         flash('Student lead updated successfully!', 'success')
@@ -105,6 +111,9 @@ def edit_student_lead(lead_id):
         form.fee.data = student.fee
         form.area.data = student.area
         form.gender_preference.data = student.gender_preference
+        form.lead_source.data = student.lead_source if student.lead_source else ''
+        form.referral_name.data = student.referral_name if student.referral_name else ''
+        form.preferred_timing.data = student.preferred_timing if student.preferred_timing else ''
     
     return render_template('student_form.html', title='Edit Student Lead', form=form)
 
@@ -147,7 +156,9 @@ def new_teacher():
             pincode=form.pincode.data,
             qualification=form.qualification.data,
             stream=form.stream.data,
-            board=form.board.data
+            board=form.board.data,
+            teaching_experience=form.teaching_experience.data,
+            teaching_experience_details=form.teaching_experience_details.data
         )
         db.session.add(teacher)
         db.session.commit()

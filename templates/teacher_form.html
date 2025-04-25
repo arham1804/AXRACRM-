@@ -148,7 +148,33 @@
                             
                             <!-- Teaching Section -->
                             <div class="col-12 mt-4 mb-2">
-                                <h5 class="text-primary">Teaching Preferences</h5>
+                                <h5 class="text-primary">Teaching Experience & Preferences</h5>
+                            </div>
+                            
+                            <!-- Teaching Experience (Years) -->
+                            <div class="col-md-6">
+                                <label for="{{ form.teaching_experience.id }}" class="form-label">Teaching Experience (Years)</label>
+                                {{ form.teaching_experience(class="form-control", type="number", min="0", max="50", placeholder="Enter years of experience") }}
+                                {% if form.teaching_experience.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.teaching_experience.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Experience Details -->
+                            <div class="col-md-6">
+                                <label for="{{ form.teaching_experience_details.id }}" class="form-label">Experience Details</label>
+                                {{ form.teaching_experience_details(class="form-control", placeholder="Enter details about previous teaching experience") }}
+                                {% if form.teaching_experience_details.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.teaching_experience_details.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
                             </div>
                             
                             <!-- Preferred Subjects -->
