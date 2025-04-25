@@ -5,17 +5,24 @@
     <!-- Page header -->
     <div class="d-flex justify-content-between align-items-center mb-4 page-header">
         <h1 class="h2">Student Leads</h1>
-        <a href="{{ url_for('new_student_lead') }}" class="btn btn-primary">
-            <i data-feather="plus"></i> Add New Lead
-        </a>
+        <div class="d-flex">
+            <a href="#" class="btn btn-success me-2" id="exportBtn">
+                <i data-feather="download" class="me-1"></i> Export Data
+            </a>
+            <a href="{{ url_for('new_student_lead') }}" class="btn btn-primary">
+                <i data-feather="plus" class="me-1"></i> Add New Lead
+            </a>
+        </div>
     </div>
     
     <!-- Status filter -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">Filter by Status</h5>
+                </div>
                 <div class="card-body">
-                    <h5 class="card-title">Filter by Status</h5>
                     <div class="d-flex flex-wrap gap-2">
                         <a href="{{ url_for('student_leads') }}" class="btn btn-sm {% if current_filter == '' %}btn-primary{% else %}btn-outline-primary{% endif %}">All</a>
                         <a href="{{ url_for('student_leads', status='New') }}" class="btn btn-sm {% if current_filter == 'New' %}btn-info{% else %}btn-outline-info{% endif %}">New</a>

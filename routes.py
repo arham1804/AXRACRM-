@@ -554,20 +554,25 @@ def api_unread_notifications():
         'notifications': notifications_data
     })
 
-# Demo reassignment route for failed demos
+# Demo reassignment route for failed demos or unattended demos
 @app.route('/demo/<int:demo_id>/reassign', methods=['GET', 'POST'])
 @login_required
 def reassign_teacher_for_demo(demo_id):
     demo = Demo.query.get_or_404(demo_id)
     
-    # Only allow reassignment for completed demos with poor feedback
-    if demo.status != 'Completed' or not demo.feedback:
+    # Allow reassignment for completed demos with poor feedback or demos that are scheduled but past due
+    if demo.status == 'Completed' and demo.feedback:
+        # For completed demos, check feedback rating
+        if demo.feedback.rating >= 4:
+            flash('This demo has positive feedback and does not need reassignment.', 'info')
+            return redirect(url_for('demo_tracking'))
+    elif demo.status == 'Scheduled':
+        # For scheduled demos, check if they're past due (scheduled date is in the past)
+        if demo.scheduled_date > datetime.utcnow():
+            flash('This demo is still scheduled for the future and not eligible for reassignment yet.', 'warning')
+            return redirect(url_for('demo_tracking'))
+    else:
         flash('This demo is not eligible for teacher reassignment.', 'warning')
-        return redirect(url_for('demo_tracking'))
-    
-    # If feedback is good (4-5), don't allow reassignment
-    if demo.feedback.rating >= 4:
-        flash('This demo has positive feedback and does not need reassignment.', 'info')
         return redirect(url_for('demo_tracking'))
     
     student = demo.assignment.student
