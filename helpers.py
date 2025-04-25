@@ -164,9 +164,11 @@ def generate_dashboard_stats():
     recent_demos = Demo.query.order_by(Demo.created_at.desc()).limit(5).all()
     stats['recent_demos'] = [{
         'id': demo.id,
+        'tuition_id': demo.assignment.tuition_id,
         'student_name': demo.assignment.student.name,
         'teacher_name': demo.assignment.teacher.name,
-        'scheduled_date': demo.scheduled_date.strftime('%Y-%m-%d %H:%M'),
+        'area': demo.assignment.student.area,
+        'scheduled_date': demo.scheduled_date.strftime('%d %b %Y') if demo.scheduled_date else '',
         'status': demo.status
     } for demo in recent_demos]
     
