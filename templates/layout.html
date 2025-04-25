@@ -38,12 +38,25 @@
             {% if current_user.is_authenticated %}
             <div class="col-md-2 col-lg-2 d-md-block sidebar py-3">
                 <div class="mb-4 px-3 d-flex align-items-center">
-                    <a class="navbar-brand fs-4" href="{{ url_for('dashboard') }}">
-                        Axra Tutor
+                    <a class="navbar-brand fs-4 text-royal-purple" href="{{ url_for('dashboard') }}">
+                        <span class="text-royal-gold">Axra</span> Tutor
                     </a>
-                    <button class="btn btn-sm d-md-none ms-auto" id="mobileSidebarToggle" type="button">
+                    <button class="btn btn-sm btn-outline-secondary d-md-none ms-auto" id="mobileSidebarToggle" type="button">
                         <i data-feather="menu"></i>
                     </button>
+                </div>
+                <div class="px-3 mb-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-royal-purple text-white rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i data-feather="user" class="feather-sm"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0 font-weight-bold">{{ current_user.name }}</h6>
+                            <small class="text-muted">Administrator</small>
+                        </div>
+                    </div>
                 </div>
                 <ul class="nav flex-column" id="sidebarNav">
                     <li class="nav-item">
@@ -110,7 +123,7 @@
             <main class="{% if current_user.is_authenticated %}col-md-10 col-lg-10 ms-sm-auto{% else %}col-12{% endif %} px-md-4 py-4">
                 <!-- Top Navigation Bar with Notifications -->
                 {% if current_user.is_authenticated %}
-                <nav class="navbar navbar-dark mb-4 p-2 rounded shadow-sm">
+                <nav class="navbar navbar-dark gradient-purple mb-4 p-2 rounded shadow-sm">
                     <div class="container-fluid">
                         <span class="navbar-brand mb-0 h1">{{ title if title else 'Axra Tutor CRM' }}</span>
                         <div class="d-flex align-items-center">
@@ -209,6 +222,34 @@
     
     <!-- Custom Scripts -->
     <script src="{{ url_for('static', filename='js/formValidation.js') }}"></script>
+
+    <!-- Mobile sidebar toggle -->
+    <script>
+        $(document).ready(function() {
+            // Mobile sidebar toggle
+            $('#mobileSidebarToggle').click(function() {
+                $('#sidebarNav').toggleClass('show');
+                
+                // Toggle icon between menu and x
+                var icon = $(this).find('svg').attr('data-feather');
+                var newIcon = icon === 'menu' ? 'x' : 'menu';
+                
+                $(this).find('svg').remove();
+                $(this).prepend(feather.icons[newIcon].toSvg());
+                feather.replace();
+            });
+            
+            // Close sidebar when clicking on a link (for mobile)
+            $('#sidebarNav .nav-link').click(function() {
+                if ($(window).width() < 768) {
+                    $('#sidebarNav').removeClass('show');
+                    $('#mobileSidebarToggle').find('svg').remove();
+                    $('#mobileSidebarToggle').prepend(feather.icons['menu'].toSvg());
+                    feather.replace();
+                }
+            });
+        });
+    </script>
     
     <!-- Notification Scripts -->
     <script>

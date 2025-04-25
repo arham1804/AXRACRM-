@@ -510,7 +510,108 @@ select[multiple] {
     margin-bottom: 0.5rem;
 }
 
-/* Added styles for smaller mobile devices */
+/* Mobile and responsive design enhancements */
+/* Additional utility classes */
+.feather-sm {
+    width: 16px;
+    height: 16px;
+}
+
+.feather-lg {
+    width: 24px;
+    height: 24px;
+}
+
+.text-royal-purple {
+    color: var(--royal-purple) !important;
+}
+
+.text-royal-gold {
+    color: var(--royal-gold) !important;
+}
+
+.bg-royal-purple {
+    background-color: var(--royal-purple) !important;
+}
+
+.bg-royal-gold {
+    background-color: var(--royal-gold) !important;
+}
+
+.gradient-purple {
+    background: linear-gradient(135deg, var(--royal-purple), var(--royal-purple-dark)) !important;
+    color: white;
+}
+
+.card-hover-effect {
+    transition: all 0.3s ease;
+}
+
+.card-hover-effect:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.1);
+}
+
+/* Table enhancements */
+.table th {
+    background-color: rgba(var(--bs-light-rgb), 0.7);
+    font-weight: 600;
+    color: var(--royal-gray-800);
+    border-top: none;
+    border-bottom: 2px solid var(--royal-purple-light);
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(var(--bs-light-rgb), 0.35);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(var(--bs-primary-rgb), 0.05);
+}
+
+/* Mobile sidebar toggle behavior */
+@media (max-width: 768px) {
+    #sidebarNav {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.5s ease;
+    }
+    
+    #sidebarNav.show {
+        max-height: 1000px;
+    }
+
+    /* Font size adjustments for mobile */
+    h1, .h1 {
+        font-size: 1.75rem;
+    }
+    
+    h2, .h2 {
+        font-size: 1.5rem;
+    }
+    
+    /* Add padding to main content on mobile */
+    main {
+        padding: 1rem !important;
+    }
+    
+    /* Better table experience on mobile */
+    .table-responsive {
+        margin-bottom: 1rem;
+    }
+    
+    .table-responsive .table {
+        margin-bottom: 0;
+    }
+    
+    /* Full-width cards on mobile */
+    .card-deck .card, 
+    .row .card {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Styles for smaller mobile devices */
 @media (max-width: 576px) {
     /* Page header adjustments */
     .page-header h1 {
@@ -523,7 +624,8 @@ select[multiple] {
     }
     
     /* Floating action button style for main actions */
-    .page-header .btn-primary {
+    .page-header .btn-primary,
+    .mobile-fab {
         position: fixed;
         right: 1rem;
         bottom: 1rem;
@@ -534,18 +636,29 @@ select[multiple] {
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        font-size: 1.5rem;
     }
     
     /* Hide text on FAB, just show icon */
-    .page-header .btn-primary span {
+    .page-header .btn-primary span,
+    .mobile-fab span {
         display: none;
+    }
+    
+    /* Add plus icon to FAB if no icon exists */
+    .page-header .btn-primary:not(:has(i))::after,
+    .mobile-fab:not(:has(i))::after {
+        content: '+';
+        font-weight: bold;
+        font-size: 1.5rem;
     }
     
     /* Notification adjustments for mobile */
     .notification-dropdown {
         width: 100% !important;
         min-width: 280px;
+        max-width: 100%;
     }
     
     .notification-item .btn-group {
@@ -554,6 +667,7 @@ select[multiple] {
     
     .notification-item .btn-group .btn {
         margin-bottom: 0.5rem;
+        width: 100%;
     }
     
     /* Export dropdown on mobile */
@@ -566,10 +680,48 @@ select[multiple] {
         width: 100%;
         border-radius: 1rem 1rem 0 0;
         padding: 1rem;
+        box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
     }
     
     .export-dropdown .dropdown-item {
         padding: 1rem;
-        border-bottom: 1px solid var(--bs-border-color);
+        border-bottom: 1px solid var(--royal-gray-300);
+    }
+    
+    .export-dropdown .dropdown-item:last-child {
+        border-bottom: none;
+    }
+    
+    /* Improved form layout on mobile */
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+    
+    /* Improved table scrolling on mobile */
+    .table-responsive {
+        max-height: 70vh;
+    }
+    
+    /* Card adjustments for mobile */
+    .card-header {
+        padding: 0.75rem 1rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    /* Modal fixes for mobile */
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+    
+    .modal-content {
+        border-radius: 0.75rem;
+    }
+    
+    /* Better spacing for filters on mobile */
+    .filter-row .form-group {
+        margin-bottom: 0.75rem;
     }
 }

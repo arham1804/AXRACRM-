@@ -3,36 +3,43 @@
 {% block content %}
 <div class="container">
     <div class="row justify-content-center align-items-center min-vh-100">
-        <div class="col-md-6 col-lg-5">
-            <div class="card shadow-lg border-0">
-                <div class="card-body p-5">
+        <div class="col-sm-11 col-md-8 col-lg-5">
+            <div class="card shadow-lg border-0 card-hover-effect">
+                <div class="card-header text-center py-4 gradient-purple">
+                    <h2 class="text-white mb-0">
+                        <span class="text-royal-gold fw-bold">Axra</span> Tutor CRM
+                    </h2>
+                </div>
+                <div class="card-body p-4 p-lg-5">
                     <div class="text-center mb-4">
-                        <h2 class="text-primary fw-bold">Axra Tutor</h2>
-                        <p class="text-muted">Home Tutoring CRM</p>
+                        <p class="text-muted">Admin Login Portal</p>
+                        <div class="bg-light p-3 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                            <i data-feather="user" class="text-royal-purple" style="width: 40px; height: 40px;"></i>
+                        </div>
                     </div>
                     
                     <form method="POST" action="" class="needs-validation" novalidate>
                         {{ form.hidden_tag() }}
                         
-                        <div class="mb-4">
-                            <label for="{{ form.email.id }}" class="form-label">Email Address</label>
-                            {{ form.email(class="form-control form-control-lg", placeholder="Enter your email") }}
+                        <div class="form-floating mb-4">
+                            {{ form.email(class="form-control", placeholder="name@example.com", id="floatingEmail") }}
+                            <label for="floatingEmail">Email Address</label>
                             {% if form.email.errors %}
-                                <div class="invalid-feedback d-block">
+                                <div class="invalid-feedback d-block mt-1">
                                     {% for error in form.email.errors %}
-                                        {{ error }}
+                                        <i data-feather="alert-circle" class="feather-sm me-1"></i> {{ error }}
                                     {% endfor %}
                                 </div>
                             {% endif %}
                         </div>
                         
-                        <div class="mb-4">
-                            <label for="{{ form.password.id }}" class="form-label">Password</label>
-                            {{ form.password(class="form-control form-control-lg", placeholder="Enter your password") }}
+                        <div class="form-floating mb-4">
+                            {{ form.password(class="form-control", placeholder="Password", id="floatingPassword") }}
+                            <label for="floatingPassword">Password</label>
                             {% if form.password.errors %}
-                                <div class="invalid-feedback d-block">
+                                <div class="invalid-feedback d-block mt-1">
                                     {% for error in form.password.errors %}
-                                        {{ error }}
+                                        <i data-feather="alert-circle" class="feather-sm me-1"></i> {{ error }}
                                     {% endfor %}
                                 </div>
                             {% endif %}
@@ -45,10 +52,16 @@
                             </label>
                         </div>
                         
-                        <div class="d-grid">
-                            {{ form.submit(class="btn btn-primary btn-lg") }}
+                        <div class="d-grid gap-2">
+                            {{ form.submit(class="btn btn-lg gradient-purple") }}
                         </div>
                     </form>
+                </div>
+                <div class="card-footer bg-light py-3 text-center">
+                    <div class="d-flex justify-content-center align-items-center">
+                        <i data-feather="shield" class="text-royal-purple me-2"></i>
+                        <span class="text-muted small">Secure login portal for administrators</span>
+                    </div>
                 </div>
             </div>
             
@@ -60,4 +73,16 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Focus on email field when page loads
+        $('#floatingEmail').focus();
+        
+        // Initialize feather icons
+        feather.replace();
+    });
+</script>
 {% endblock %}
