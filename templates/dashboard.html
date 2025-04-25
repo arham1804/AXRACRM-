@@ -114,7 +114,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Lead Status</h5>
                     <div class="chart-container">
-                        <canvas id="leadStatusChart" data-stats="{{ stats.lead_status|tojson }}"></canvas>
+                        <canvas id="leadStatusChart" data-stats="{{ stats.lead_status|tojson|safe }}"></canvas>
                     </div>
                 </div>
             </div>
@@ -125,7 +125,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Assignment Status</h5>
                     <div class="chart-container">
-                        <canvas id="assignmentStatusChart" data-stats="{{ stats.assignment_status|tojson }}"></canvas>
+                        <canvas id="assignmentStatusChart" data-stats="{{ stats.assignment_status|tojson|safe }}"></canvas>
                     </div>
                 </div>
             </div>
@@ -136,7 +136,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Demo Status</h5>
                     <div class="chart-container">
-                        <canvas id="demoStatusChart" data-stats="{{ stats.demo_status|tojson }}"></canvas>
+                        <canvas id="demoStatusChart" data-stats="{{ stats.demo_status|tojson|safe }}"></canvas>
                     </div>
                 </div>
             </div>
@@ -151,9 +151,9 @@
                     <h5 class="card-title">Monthly Trends</h5>
                     <div class="chart-container">
                         <canvas id="monthlyTrendsChart" 
-                                data-months="{{ stats.trend_months|tojson }}"
-                                data-leads="{{ stats.trend_leads|tojson }}"
-                                data-conversions="{{ stats.trend_conversions|tojson }}"></canvas>
+                                data-months="{{ stats.trend_months|tojson|safe }}"
+                                data-leads="{{ stats.trend_leads|tojson|safe }}"
+                                data-conversions="{{ stats.trend_conversions|tojson|safe }}"></canvas>
                     </div>
                 </div>
             </div>
