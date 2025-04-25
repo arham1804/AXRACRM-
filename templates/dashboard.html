@@ -4,104 +4,197 @@
 <div class="container-fluid">
     <!-- Page header -->
     <div class="d-flex justify-content-between align-items-center mb-4 page-header">
-        <h1 class="h2">Dashboard</h1>
-        <button id="refreshDashboard" class="btn btn-sm btn-outline-primary">
-            <i data-feather="refresh-cw"></i> Refresh
+        <h1>CRM Dashboard</h1>
+        <button id="refreshDashboard" class="btn btn-outline-primary">
+            <i data-feather="refresh-cw" class="me-1"></i> Refresh
             <span id="loadingIndicator" class="spinner-border spinner-border-sm d-none" role="status"></span>
         </button>
     </div>
     
-    <!-- Stats cards -->
-    <div class="row g-4 mb-4">
-        <div class="col-12 col-sm-6 col-md-3">
-            <div class="card dashboard-card h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h6 class="card-subtitle mb-2 text-muted">Total Leads</h6>
-                            <h2 class="card-title mb-0" id="totalLeads">{{ stats.total_leads }}</h2>
-                        </div>
-                        <div class="p-2 bg-primary-subtle rounded">
-                            <i data-feather="users" class="text-primary"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <!-- Stats summary -->
+    <div class="stats-summary">
+        <div class="summary-card">
+            <div class="value" id="totalLeads">{{ stats.total_leads }}</div>
+            <div class="label">Total Leads</div>
         </div>
         
-        <div class="col-12 col-sm-6 col-md-3">
-            <div class="card dashboard-card h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h6 class="card-subtitle mb-2 text-muted">Total Teachers</h6>
-                            <h2 class="card-title mb-0" id="totalTeachers">{{ stats.total_teachers }}</h2>
-                        </div>
-                        <div class="p-2 bg-success-subtle rounded">
-                            <i data-feather="user-check" class="text-success"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="summary-card">
+            <div class="value" id="totalTeachers">{{ stats.total_teachers }}</div>
+            <div class="label">Active Teachers</div>
         </div>
         
-        <div class="col-12 col-sm-6 col-md-3">
-            <div class="card dashboard-card h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h6 class="card-subtitle mb-2 text-muted">Assignments</h6>
-                            <h2 class="card-title mb-0" id="totalAssignments">{{ stats.total_assignments }}</h2>
-                        </div>
-                        <div class="p-2 bg-warning-subtle rounded">
-                            <i data-feather="clipboard" class="text-warning"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="summary-card">
+            <div class="value" id="totalAssignments">{{ stats.total_assignments }}</div>
+            <div class="label">Assigned Today</div>
         </div>
         
-        <div class="col-12 col-sm-6 col-md-3">
-            <div class="card dashboard-card h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h6 class="card-subtitle mb-2 text-muted">Demo Sessions</h6>
-                            <h2 class="card-title mb-0" id="totalDemos">{{ stats.total_demos }}</h2>
-                        </div>
-                        <div class="p-2 bg-info-subtle rounded">
-                            <i data-feather="calendar" class="text-info"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="summary-card">
+            <div class="value" id="totalDemos">{{ stats.total_demos }}</div>
+            <div class="label">Scheduled Demos</div>
+        </div>
+        
+        <div class="summary-card">
+            <div class="value" id="demoConversionRate">{{ stats.demo_to_conversion_rate }}</div>
+            <div class="label">Conversion Rate %</div>
         </div>
     </div>
     
-    <!-- Conversion rates cards -->
-    <div class="row g-4 mb-4">
-        <div class="col-md-6">
-            <div class="card dashboard-card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">Lead to Demo Conversion</h5>
-                    <div class="d-flex align-items-center">
-                        <h1 class="display-4 mb-0 me-2" id="leadConversionRate">{{ stats.lead_to_demo_rate }}</h1>
-                        <span>%</span>
-                    </div>
-                    <p class="card-text text-muted">Percentage of leads that result in a demo session</p>
+    <!-- Lead Management Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card dashboard-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Lead Management</h5>
                 </div>
-            </div>
-        </div>
-        
-        <div class="col-md-6">
-            <div class="card dashboard-card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">Demo to Tuition Conversion</h5>
-                    <div class="d-flex align-items-center">
-                        <h1 class="display-4 mb-0 me-2" id="demoConversionRate">{{ stats.demo_to_conversion_rate }}</h1>
-                        <span>%</span>
+                <div class="card-body p-0">
+                    <div class="row g-0">
+                        <div class="col-md-3 border-end">
+                            <!-- Filters -->
+                            <div class="p-3">
+                                <h6 class="text-uppercase text-muted fs-6 mb-3">Filters</h6>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold mb-2">Status</label>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="statusNew" checked>
+                                        <label class="form-check-label" for="statusNew">New</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="statusAssigned" checked>
+                                        <label class="form-check-label" for="statusAssigned">Assigned</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="statusDemo" checked>
+                                        <label class="form-check-label" for="statusDemo">Demo Scheduled</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="statusConverted" checked>
+                                        <label class="form-check-label" for="statusConverted">Converted</label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold mb-2">Area</label>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="areaAlambagh" checked>
+                                        <label class="form-check-label" for="areaAlambagh">Alambagh</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="areaGomti" checked>
+                                        <label class="form-check-label" for="areaGomti">Gomti Nagar</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="areaIndira" checked>
+                                        <label class="form-check-label" for="areaIndira">Indira Nagar</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="areaRajajipuram" checked>
+                                        <label class="form-check-label" for="areaRajajipuram">Rajajipuram</label>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="form-label fw-bold mb-2">Subject</label>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="subjectMath" checked>
+                                        <label class="form-check-label" for="subjectMath">Math</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="subjectScience" checked>
+                                        <label class="form-check-label" for="subjectScience">Science</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="subjectEnglish" checked>
+                                        <label class="form-check-label" for="subjectEnglish">English</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-9">
+                            <!-- Hot Leads & Recent Activity -->
+                            <div class="p-3">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <h6 class="text-uppercase text-muted fs-6 mb-3">Hot Leads</h6>
+                                        <div class="hot-leads mb-4">
+                                            {% for lead in stats.recent_leads[:3] %}
+                                            <div class="d-flex align-items-center p-2 border-bottom">
+                                                <div class="flex-grow-1">
+                                                    <div class="fw-bold">{{ lead.name }}</div>
+                                                    <div class="text-muted small">{{ lead.area }}</div>
+                                                </div>
+                                                <a href="{{ url_for('assign_teacher', lead_id=lead.id) }}" class="btn btn-sm btn-primary">Assign</a>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        
+                                        <h6 class="text-uppercase text-muted fs-6 mb-3">Area with High Demand</h6>
+                                        <div class="area-stats mb-4">
+                                            <div class="d-flex align-items-center p-2 border-bottom">
+                                                <div class="flex-grow-1">
+                                                    <div class="fw-bold">Gomti Nagar</div>
+                                                    <div class="text-muted small">8 Leads</div>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex align-items-center p-2 border-bottom">
+                                                <div class="flex-grow-1">
+                                                    <div class="fw-bold">Alambagh</div>
+                                                    <div class="text-muted small">6 Leads</div>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex align-items-center p-2">
+                                                <div class="flex-grow-1">
+                                                    <div class="fw-bold">Indira Nagar</div>
+                                                    <div class="text-muted small">5 Leads</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-8">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <h6 class="text-uppercase text-muted fs-6 mb-0">Student Leads</h6>
+                                            <a href="{{ url_for('student_leads') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                                        </div>
+                                        
+                                        <div class="table-responsive">
+                                            <table class="table align-middle table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Tuition ID</th>
+                                                        <th>Class</th>
+                                                        <th>Subject</th>
+                                                        <th>Area</th>
+                                                        <th>Status</th>
+                                                        <th>Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for lead in stats.recent_leads %}
+                                                    <tr>
+                                                        <td>{{ lead.lead_id }}</td>
+                                                        <td>{{ lead.class_level }}</td>
+                                                        <td>{{ lead.get_subjects_list()[0] if lead.get_subjects_list() else '' }}</td>
+                                                        <td>{{ lead.area }}</td>
+                                                        <td><span class="badge status-{{ lead.status|lower }}">{{ lead.status }}</span></td>
+                                                        <td>
+                                                            {% if lead.status == 'New' %}
+                                                            <a href="{{ url_for('assign_teacher', lead_id=lead.id) }}" class="btn btn-sm btn-primary">Assign</a>
+                                                            {% elif lead.status == 'Assigned' %}
+                                                            <a href="{{ url_for('edit_student_lead', lead_id=lead.lead_id) }}" class="btn btn-sm btn-outline-primary">Update</a>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <p class="card-text text-muted">Percentage of demos that convert to tuition assignments</p>
                 </div>
             </div>
         </div>
@@ -111,8 +204,10 @@
     <div class="row g-4 mb-4">
         <div class="col-md-4">
             <div class="card dashboard-card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Lead Status</h5>
+                </div>
                 <div class="card-body">
-                    <h5 class="card-title">Lead Status</h5>
                     <div class="chart-container">
                         <canvas id="leadStatusChart" data-stats="{{ stats.lead_status|tojson|safe }}"></canvas>
                     </div>
@@ -122,8 +217,10 @@
         
         <div class="col-md-4">
             <div class="card dashboard-card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Assignment Status</h5>
+                </div>
                 <div class="card-body">
-                    <h5 class="card-title">Assignment Status</h5>
                     <div class="chart-container">
                         <canvas id="assignmentStatusChart" data-stats="{{ stats.assignment_status|tojson|safe }}"></canvas>
                     </div>
@@ -133,8 +230,10 @@
         
         <div class="col-md-4">
             <div class="card dashboard-card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Demo Status</h5>
+                </div>
                 <div class="card-body">
-                    <h5 class="card-title">Demo Status</h5>
                     <div class="chart-container">
                         <canvas id="demoStatusChart" data-stats="{{ stats.demo_status|tojson|safe }}"></canvas>
                     </div>
@@ -147,8 +246,10 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="card dashboard-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Monthly Trends</h5>
+                </div>
                 <div class="card-body">
-                    <h5 class="card-title">Monthly Trends</h5>
                     <div class="chart-container">
                         <canvas id="monthlyTrendsChart" 
                                 data-months="{{ stats.trend_months|tojson|safe }}"
@@ -160,132 +261,80 @@
         </div>
     </div>
     
-    <!-- Tables -->
-    <div class="row g-4">
-        <!-- Recent leads -->
+    <!-- Teacher Leaderboard -->
+    <div class="row g-4 mb-4">
         <div class="col-md-6">
             <div class="card dashboard-card h-100">
-                <div class="card-header bg-transparent">
-                    <h5 class="card-title mb-0">Recent Leads</h5>
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Teacher Leaderboard</h5>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover table-sm mb-0" id="recentLeadsTable">
+                        <table class="table align-middle table-hover mb-0">
                             <thead>
                                 <tr>
-                                    <th>Name</th>
-                                    <th>Area</th>
-                                    <th>Class</th>
-                                    <th>Date</th>
+                                    <th>Rank</th>
+                                    <th>Teacher</th>
+                                    <th>Score</th>
                                     <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% if stats.recent_leads %}
-                                    {% for lead in stats.recent_leads %}
-                                    <tr>
-                                        <td>{{ lead.name }}</td>
-                                        <td>{{ lead.area }}</td>
-                                        <td>{{ lead.class_level }}</td>
-                                        <td>{{ lead.created_at }}</td>
-                                        <td><span class="badge status-{{ lead.status|lower }}">{{ lead.status }}</span></td>
-                                    </tr>
-                                    {% endfor %}
-                                {% else %}
-                                    <tr>
-                                        <td colspan="5" class="text-center">No recent leads found</td>
-                                    </tr>
+                                {% for i in range(5) %}
+                                {% if stats.top_teachers and i < stats.top_teachers|length %}
+                                <tr>
+                                    <td>{{ i+1 }}</td>
+                                    <td>{{ stats.top_teachers[i].name }}</td>
+                                    <td>{{ stats.top_teachers[i].conversion_rate }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-2 bg-success rounded-circle" style="width: 10px; height: 10px;"></div>
+                                            <span>Active</span>
+                                        </div>
+                                    </td>
+                                </tr>
                                 {% endif %}
+                                {% endfor %}
                             </tbody>
                         </table>
                     </div>
                 </div>
-                <div class="card-footer bg-transparent">
-                    <a href="{{ url_for('student_leads') }}" class="btn btn-sm btn-outline-primary">View All Leads</a>
-                </div>
             </div>
         </div>
         
-        <!-- Recent demos -->
+        <!-- Upcoming Demos -->
         <div class="col-md-6">
             <div class="card dashboard-card h-100">
-                <div class="card-header bg-transparent">
-                    <h5 class="card-title mb-0">Recent Demos</h5>
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Upcoming Demos</h5>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover table-sm mb-0" id="recentDemosTable">
+                        <table class="table align-middle table-hover mb-0">
                             <thead>
                                 <tr>
-                                    <th>Student</th>
-                                    <th>Teacher</th>
-                                    <th>Date & Time</th>
-                                    <th>Status</th>
+                                    <th>Tuition ID</th>
+                                    <th>Student Area</th>
+                                    <th>Date</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% if stats.recent_demos %}
-                                    {% for demo in stats.recent_demos %}
-                                    <tr>
-                                        <td>{{ demo.student_name }}</td>
-                                        <td>{{ demo.teacher_name }}</td>
-                                        <td>{{ demo.scheduled_date }}</td>
-                                        <td><span class="badge status-{{ demo.status|lower }}">{{ demo.status }}</span></td>
-                                    </tr>
-                                    {% endfor %}
-                                {% else %}
-                                    <tr>
-                                        <td colspan="4" class="text-center">No recent demos found</td>
-                                    </tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="card-footer bg-transparent">
-                    <a href="{{ url_for('demo_tracking') }}" class="btn btn-sm btn-outline-primary">View All Demos</a>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Top teachers -->
-        <div class="col-12">
-            <div class="card dashboard-card">
-                <div class="card-header bg-transparent">
-                    <h5 class="card-title mb-0">Top Performing Teachers</h5>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover table-sm mb-0" id="topTeachersTable">
-                            <thead>
+                                {% for demo in stats.recent_demos[:5] %}
                                 <tr>
-                                    <th>Teacher Name</th>
-                                    <th>Total Assignments</th>
-                                    <th>Conversions</th>
-                                    <th>Conversion Rate</th>
+                                    <td>{{ demo.tuition_id }}</td>
+                                    <td>{{ demo.area }}</td>
+                                    <td>{{ demo.scheduled_date.strftime('%d %b %Y') if demo.scheduled_date }}</td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {% if stats.top_teachers %}
-                                    {% for teacher in stats.top_teachers %}
-                                    <tr>
-                                        <td>{{ teacher.name }}</td>
-                                        <td>{{ teacher.total_assignments }}</td>
-                                        <td>{{ teacher.conversions }}</td>
-                                        <td>{{ teacher.conversion_rate }}%</td>
-                                    </tr>
-                                    {% endfor %}
+                                {% endfor %}
                                 {% else %}
-                                    <tr>
-                                        <td colspan="4" class="text-center">No teacher data found</td>
-                                    </tr>
+                                <tr>
+                                    <td colspan="3" class="text-center py-3">No upcoming demos scheduled</td>
+                                </tr>
                                 {% endif %}
                             </tbody>
                         </table>
                     </div>
-                </div>
-                <div class="card-footer bg-transparent">
-                    <a href="{{ url_for('teachers') }}" class="btn btn-sm btn-outline-primary">View All Teachers</a>
                 </div>
             </div>
         </div>
