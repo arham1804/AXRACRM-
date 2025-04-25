@@ -69,6 +69,20 @@
                                         <td>
                                             {% if demo.reminder_sent %}
                                                 <span class="badge bg-success">Sent</span>
+                                                {% if demo.reminder_sent_at %}
+                                                <div>
+                                                    <small class="text-muted">
+                                                        {{ demo.reminder_sent_at.strftime('%Y-%m-%d %H:%M') }}
+                                                    </small>
+                                                </div>
+                                                {% endif %}
+                                                {% if demo.reminder_notes %}
+                                                <div class="mt-1">
+                                                    <a href="#" class="text-decoration-none" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ demo.reminder_notes }}">
+                                                        <i data-feather="file-text" class="text-muted feather-sm"></i>
+                                                    </a>
+                                                </div>
+                                                {% endif %}
                                             {% else %}
                                                 <span class="badge bg-secondary">Not Sent</span>
                                             {% endif %}
@@ -108,11 +122,9 @@
                                                     {% if demo.status == 'Scheduled' %}
                                                         {% if not demo.reminder_sent %}
                                                         <li>
-                                                            <form action="{{ url_for('send_reminder', demo_id=demo.id) }}" method="POST">
-                                                                <button type="submit" class="dropdown-item">
-                                                                    <i data-feather="message-square" class="feather-sm me-1"></i> Send WhatsApp Reminder
-                                                                </button>
-                                                            </form>
+                                                            <a href="{{ url_for('send_reminder', demo_id=demo.id) }}" class="dropdown-item">
+                                                                <i data-feather="mail" class="feather-sm me-1"></i> Send Email Reminder
+                                                            </a>
                                                         </li>
                                                         {% endif %}
                                                         
@@ -181,6 +193,12 @@
                 icon.setAttribute('height', '16');
             });
         }
+        
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
         
         // Re-initialize feather icons
         feather.replace();

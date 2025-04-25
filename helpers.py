@@ -140,14 +140,16 @@ def generate_dashboard_stats():
     stats['trend_conversions'] = conversion_counts
     
     # Top performing teachers (based on conversion rate)
+    from sqlalchemy.sql import case
+    
     top_teachers = db.session.query(
         Teacher.id,
         Teacher.name,
         Teacher.teacher_id,
         func.count(TuitionAssignment.id).label('total_assignments'),
-        func.sum(case([(TuitionAssignment.status == 'Converted', 1)], else_=0)).label('conversions')
+        func.sum(case((TuitionAssignment.status == 'Converted', 1), else_=0)).label('conversions')
     ).join(TuitionAssignment).group_by(Teacher.id).order_by(
-        func.sum(case([(TuitionAssignment.status == 'Converted', 1)], else_=0)).desc()
+        func.sum(case((TuitionAssignment.status == 'Converted', 1), else_=0)).desc()
     ).limit(5).all()
     
     stats['top_teachers'] = [{
@@ -184,4 +186,6 @@ def generate_dashboard_stats():
 def case(whens, else_=None):
     """Helper for building case statements in SQL"""
     from sqlalchemy.sql import case
-    return case(whens, else_=else_)
+    # In newer SQLAlchemy versions, case() expects individual tuples, not a list of tuples
+    whens_list = list(whens)  # Convert to list to ensure it's iterable
+    return case(*whens_list, else_=else_)
