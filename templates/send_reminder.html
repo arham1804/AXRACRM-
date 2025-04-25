@@ -1,0 +1,75 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 page-header">
+        <h1 class="h2">Send Demo Reminder</h1>
+        <a href="{{ url_for('demo_tracking') }}" class="btn btn-outline-secondary">
+            <i data-feather="arrow-left"></i> Back to Demo Tracking
+        </a>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8 col-lg-6 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Email Reminder Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h6 class="text-muted">Demo Information</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span class="fw-bold">Student:</span>
+                                <span>{{ demo.assignment.student.name }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span class="fw-bold">Teacher:</span>
+                                <span>{{ demo.assignment.teacher.name }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span class="fw-bold">Scheduled Date:</span>
+                                <span>{{ demo.scheduled_date.strftime('%Y-%m-%d %H:%M') }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span class="fw-bold">Email Recipients:</span>
+                                <span>axra.tutors@gmail.com</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('send_reminder', demo_id=demo.id) }}">
+                        <div class="mb-3">
+                            <label for="reminderNotes" class="form-label">Additional Notes</label>
+                            <textarea class="form-control" id="reminderNotes" name="reminder_notes" rows="3" 
+                                      placeholder="Add any special instructions or notes for this reminder..."></textarea>
+                            <div class="form-text">These notes will be saved with the reminder record.</div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i data-feather="info" class="feather-sm me-2"></i>
+                            <span>This will record an email reminder as sent to both student and teacher.</span>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i data-feather="send" class="feather-sm me-1"></i> Record Email Reminder
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Initialize feather icons
+    document.addEventListener('DOMContentLoaded', function() {
+        feather.replace();
+    });
+</script>
+{% endblock %}

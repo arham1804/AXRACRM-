@@ -309,16 +309,38 @@ def demo_tracking():
         demos = Demo.query.order_by(Demo.scheduled_date).all()
     return render_template('demo_tracking.html', title='Demo Tracking', demos=demos, current_filter=status_filter)
 
-@app.route('/demo/<int:demo_id>/send-reminder', methods=['POST'])
+@app.route('/demo/<int:demo_id>/send-reminder', methods=['GET', 'POST'])
 @login_required
 def send_reminder(demo_id):
     demo = Demo.query.get_or_404(demo_id)
-    # In a real system, this would send a WhatsApp message
-    # Here we'll just update the reminder_sent flag
-    demo.reminder_sent = True
-    db.session.commit()
-    flash('Reminder sent successfully!', 'success')
-    return redirect(url_for('demo_tracking'))
+    
+    if request.method == 'POST':
+        notes = request.form.get('reminder_notes', '')
+        
+        # Simulate sending an email
+        student_name = demo.assignment.student.name
+        teacher_name = demo.assignment.teacher.name
+        scheduled_date = demo.scheduled_date.strftime("%Y-%m-%d %H:%M")
+        
+        # Log the email simulation
+        log_message = f"Email reminder sent to {student_name} and {teacher_name} for demo on {scheduled_date}."
+        if notes:
+            log_message += f" Notes: {notes}"
+        
+        # Update the demo with reminder information
+        demo.reminder_sent = True
+        demo.reminder_sent_at = datetime.utcnow()
+        demo.reminder_notes = notes
+        
+        # Add to database
+        db.session.commit()
+        
+        flash('Email reminder recorded successfully!', 'success')
+        logging.info(log_message)
+        return redirect(url_for('demo_tracking'))
+    
+    # GET request - show the reminder form
+    return render_template('send_reminder.html', title='Send Demo Reminder', demo=demo)
 
 @app.route('/demo/<int:demo_id>/mark-completed', methods=['POST'])
 @login_required

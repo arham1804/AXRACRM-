@@ -82,6 +82,8 @@ class Demo(db.Model):
     scheduled_date = db.Column(db.DateTime, nullable=False)
     status = db.Column(db.String(20), default="Scheduled")  # Scheduled, Completed, Cancelled
     reminder_sent = db.Column(db.Boolean, default=False)
+    reminder_sent_at = db.Column(db.DateTime, nullable=True)
+    reminder_notes = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationship
