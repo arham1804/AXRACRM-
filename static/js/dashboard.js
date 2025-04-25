@@ -16,7 +16,8 @@ function initLeadStatusChart() {
     const ctx = document.getElementById('leadStatusChart');
     if (!ctx) return;
     
-    const leadData = JSON.parse(ctx.getAttribute('data-stats'));
+    const leadDataStr = ctx.getAttribute('data-stats');
+    const leadData = leadDataStr ? JSON.parse(leadDataStr) : {};
     
     new Chart(ctx, {
         type: 'doughnut',
@@ -62,7 +63,8 @@ function initAssignmentStatusChart() {
     const ctx = document.getElementById('assignmentStatusChart');
     if (!ctx) return;
     
-    const assignmentData = JSON.parse(ctx.getAttribute('data-stats'));
+    const assignmentDataStr = ctx.getAttribute('data-stats');
+    const assignmentData = assignmentDataStr ? JSON.parse(assignmentDataStr) : {};
     
     new Chart(ctx, {
         type: 'doughnut',
@@ -108,7 +110,8 @@ function initDemoStatusChart() {
     const ctx = document.getElementById('demoStatusChart');
     if (!ctx) return;
     
-    const demoData = JSON.parse(ctx.getAttribute('data-stats'));
+    const demoDataStr = ctx.getAttribute('data-stats');
+    const demoData = demoDataStr ? JSON.parse(demoDataStr) : {};
     
     new Chart(ctx, {
         type: 'doughnut',
@@ -152,9 +155,13 @@ function initMonthlyTrendsChart() {
     const ctx = document.getElementById('monthlyTrendsChart');
     if (!ctx) return;
     
-    const months = JSON.parse(ctx.getAttribute('data-months'));
-    const leads = JSON.parse(ctx.getAttribute('data-leads'));
-    const conversions = JSON.parse(ctx.getAttribute('data-conversions'));
+    const monthsStr = ctx.getAttribute('data-months');
+    const leadsStr = ctx.getAttribute('data-leads');
+    const conversionsStr = ctx.getAttribute('data-conversions');
+    
+    const months = monthsStr ? JSON.parse(monthsStr) : [];
+    const leads = leadsStr ? JSON.parse(leadsStr) : [];
+    const conversions = conversionsStr ? JSON.parse(conversionsStr) : [];
     
     new Chart(ctx, {
         type: 'line',
