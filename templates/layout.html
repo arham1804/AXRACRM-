@@ -1,12 +1,16 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="en" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Axra Tutor CRM | {{ title }}</title>
-    <!-- Bootstrap CSS (Replit-themed) -->
-    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Custom styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
     <!-- Feather Icons -->
@@ -15,18 +19,17 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-
-    <div class="container-fluid">
-        <div class="row">
+    <div class="container-fluid p-0">
+        <div class="row g-0">
             <!-- Sidebar -->
             {% if current_user.is_authenticated %}
-            <div class="col-md-2 col-lg-2 d-md-block bg-dark sidebar py-3">
-                <div class="mb-4 px-3">
-                    <a class="navbar-brand text-primary fs-4" href="{{ url_for('dashboard') }}">
+            <div class="col-md-2 col-lg-2 d-md-block sidebar py-0">
+                <div class="mb-0">
+                    <a class="navbar-brand" href="{{ url_for('dashboard') }}">
                         Axra Tutor
                     </a>
                 </div>
-                <ul class="nav flex-column">
+                <ul class="nav flex-column p-3">
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" 
                            href="{{ url_for('dashboard') }}">
@@ -74,6 +77,89 @@
             
             <!-- Main content -->
             <main class="{% if current_user.is_authenticated %}col-md-10 col-lg-10 ms-sm-auto{% else %}col-12{% endif %} px-md-4 py-4">
+                <!-- Top navigation -->
+                {% if current_user.is_authenticated %}
+                <nav class="navbar navbar-expand-lg navbar-light mb-4">
+                    <div class="container-fluid">
+                        <button class="navbar-toggler d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#topNavbar">
+                            <span class="navbar-toggler-icon"></span>
+                        </button>
+                        
+                        <div class="collapse navbar-collapse" id="topNavbar">
+                            <form class="d-flex me-auto">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0">
+                                        <i data-feather="search" class="text-muted" style="width: 1rem; height: 1rem;"></i>
+                                    </span>
+                                    <input type="search" class="form-control border-start-0" placeholder="Search...">
+                                </div>
+                            </form>
+                            
+                            <ul class="navbar-nav ms-auto">
+                                <!-- Notification dropdown -->
+                                <li class="nav-item dropdown me-3">
+                                    <a class="nav-link p-0 notification-bell" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i data-feather="bell"></i>
+                                        <span class="notification-badge">3</span>
+                                    </a>
+                                    <div class="dropdown-menu dropdown-menu-end notification-dropdown" aria-labelledby="notificationDropdown">
+                                        <div class="notification-header">
+                                            Notifications
+                                        </div>
+                                        <div class="notification-body" style="max-height: 300px; overflow-y: auto;">
+                                            <div class="notification-item unread">
+                                                <div class="notification-title">New Lead Assigned</div>
+                                                <div class="notification-text">Student AX-2105 has been assigned to S. Sharma</div>
+                                                <div class="notification-time">10 min ago</div>
+                                            </div>
+                                            <div class="notification-item unread">
+                                                <div class="notification-title">Demo Scheduled</div>
+                                                <div class="notification-text">Demo scheduled for student AX-2110 on April 18</div>
+                                                <div class="notification-time">1 hour ago</div>
+                                            </div>
+                                            <div class="notification-item unread">
+                                                <div class="notification-title">Feedback Pending</div>
+                                                <div class="notification-text">Demo completed for AX-1004, feedback required</div>
+                                                <div class="notification-time">Yesterday</div>
+                                            </div>
+                                            <div class="notification-item">
+                                                <div class="notification-title">New Teacher</div>
+                                                <div class="notification-text">New teacher N. Tiwari added to the system</div>
+                                                <div class="notification-time">2 days ago</div>
+                                            </div>
+                                        </div>
+                                        <div class="notification-footer">
+                                            <a href="#">View all notifications</a>
+                                        </div>
+                                    </div>
+                                </li>
+                                
+                                <!-- User dropdown -->
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <span class="d-none d-md-inline me-1">{{ current_user.name }}</span>
+                                        <div class="avatar bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                            {{ current_user.name[:1] }}
+                                        </div>
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                        <li><a class="dropdown-item" href="#"><i data-feather="user" class="feather-sm me-2"></i> Profile</a></li>
+                                        <li><a class="dropdown-item" href="#"><i data-feather="settings" class="feather-sm me-2"></i> Settings</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i data-feather="log-out" class="feather-sm me-2"></i> Logout</a></li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </nav>
+                {% endif %}
+                
+                <!-- Background arch design for nawabi style -->
+                <div class="arch-bg-container position-absolute" style="top: 0; left: 0; width: 100%; height: 250px; overflow: hidden; z-index: -1; opacity: 0.03;">
+                    <img src="https://i.imgur.com/Bvl9JGD.png" alt="Islamic Arch Pattern" style="width: 100%;">
+                </div>
+                
                 <!-- Flash messages -->
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
