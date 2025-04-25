@@ -1,14 +1,35 @@
 // Dashboard charts and dynamic data loading
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize charts
-    initLeadStatusChart();
-    initAssignmentStatusChart();
-    initDemoStatusChart();
-    initMonthlyTrendsChart();
-    
-    // Add event listeners
-    setupRefreshButton();
+// Define global initialization function that will be called after all utilities are loaded
+function initializePage() {
+    try {
+        console.log('Initializing dashboard page...');
+        
+        // Initialize charts
+        initLeadStatusChart();
+        initAssignmentStatusChart();
+        initDemoStatusChart();
+        initMonthlyTrendsChart();
+        
+        // Add event listeners
+        setupRefreshButton();
+        
+        // Setup export buttons
+        setupExportButtons();
+        
+        console.log('Dashboard initialized successfully');
+    } catch (error) {
+        console.error('Error initializing dashboard:', error);
+    }
+}
+
+// Also define jQuery ready handler for backward compatibility
+$(document).ready(function() {
+    // If not already initialized, try to initialize
+    if (typeof initializePage === 'function' && !window.dashboardInitialized) {
+        window.dashboardInitialized = true;
+        initializePage();
+    }
 });
 
 // Lead Status Chart
@@ -392,33 +413,46 @@ function updateCharts(data) {
     window.location.reload(); // Simple refresh for now to update charts
 }
 
-// Show toast notification
+// Show toast notification using the toastNotification utility
 function showToast(message, type = 'success') {
-    const toastContainer = document.getElementById('toastContainer');
-    if (!toastContainer) return;
-    
-    const toast = document.createElement('div');
-    toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0`;
-    toast.setAttribute('role', 'alert');
-    toast.setAttribute('aria-live', 'assertive');
-    toast.setAttribute('aria-atomic', 'true');
-    
-    toast.innerHTML = `
-        <div class="d-flex">
-            <div class="toast-body">
-                ${message}
-            </div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-    `;
-    
-    toastContainer.appendChild(toast);
-    
-    const bsToast = new bootstrap.Toast(toast);
-    bsToast.show();
-    
-    // Remove toast after it's hidden
-    toast.addEventListener('hidden.bs.toast', function() {
-        toast.remove();
-    });
+    // Check if toastNotification is available
+    if (typeof toastNotification !== 'undefined') {
+        // Use our toast notification system
+        if (type === 'success') {
+            toastNotification.success(message);
+        } else if (type === 'error') {
+            toastNotification.error(message);
+        } else if (type === 'warning') {
+            toastNotification.warning(message);
+        } else {
+            toastNotification.info(message);
+        }
+    } else {
+        // Fallback to native browser alert
+        console.warn('Toast notification system not available');
+        alert(message);
+    }
+}
+
+// Setup export buttons for dashboard tables
+function setupExportButtons() {
+    try {
+        // Check if export utility is available
+        if (typeof addExportDropdown === 'function') {
+            // Add export dropdown to recent leads
+            addExportDropdown('recentLeadsExport', 'recentLeadsTable', 'recent_leads');
+            
+            // Add export dropdown to recent demos
+            addExportDropdown('recentDemosExport', 'recentDemosTable', 'recent_demos');
+            
+            // Add export dropdown to top teachers
+            addExportDropdown('topTeachersExport', 'topTeachersTable', 'top_teachers');
+            
+            console.log('Dashboard export buttons initialized');
+        } else {
+            console.warn('Export utility not available');
+        }
+    } catch (error) {
+        console.error('Error setting up export buttons:', error);
+    }
 }

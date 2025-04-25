@@ -303,9 +303,25 @@
     <script>
         // Wait for jQuery to be ready before loading custom scripts
         jQueryReady(function() {
-            $.getScript("{{ url_for('static', filename='js/formValidation.js') }}");
-            $.getScript("{{ url_for('static', filename='js/toastNotification.js') }}");
-            $.getScript("{{ url_for('static', filename='js/exportUtility.js') }}");
+            // Load scripts sequentially in order of dependency
+            $.getScript("{{ url_for('static', filename='js/formValidation.js') }}")
+                .then(function() {
+                    return $.getScript("{{ url_for('static', filename='js/toastNotification.js') }}");
+                })
+                .then(function() {
+                    return $.getScript("{{ url_for('static', filename='js/exportUtility.js') }}");
+                })
+                .then(function() {
+                    // Once all utility scripts are loaded, initialize any page-specific scripts
+                    if (typeof initializePage === 'function') {
+                        initializePage();
+                    }
+                    
+                    console.log('All utility scripts loaded successfully');
+                })
+                .catch(function(error) {
+                    console.error('Error loading scripts:', error);
+                });
         });
     </script>
 
