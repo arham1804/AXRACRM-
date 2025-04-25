@@ -381,6 +381,76 @@ def mark_demo_cancelled(demo_id):
     flash('Demo marked as cancelled!', 'success')
     return redirect(url_for('demo_tracking'))
 
+@app.route('/demo/<int:demo_id>/reassign', methods=['GET', 'POST'])
+@login_required
+def reassign_teacher(demo_id):
+    demo = Demo.query.get_or_404(demo_id)
+    assignment = demo.assignment
+    student = assignment.student
+    
+    form = AssignTeacherForm()
+    
+    # Get all active teachers for the dropdown
+    teachers = Teacher.query.filter_by(status='Active').all()
+    form.teacher_id.choices = [(t.id, f"{t.name} ({t.teacher_id})") for t in teachers]
+    
+    # Set the current teacher as selected
+    if request.method == 'GET':
+        form.teacher_id.data = assignment.teacher_id
+    
+    if form.validate_on_submit():
+        # Get the new teacher
+        new_teacher_id = form.teacher_id.data
+        if new_teacher_id == assignment.teacher_id:
+            flash('Same teacher selected. No changes made.', 'warning')
+            return redirect(url_for('demo_tracking'))
+        
+        # Update the assignment with the new teacher
+        assignment.teacher_id = new_teacher_id
+        
+        # Create a new demo record
+        new_demo = Demo(
+            assignment_id=assignment.id,
+            scheduled_date=datetime.utcnow() + timedelta(days=1),  # Default to next day
+            status='Scheduled'
+        )
+        
+        # Update old demo
+        demo.status = 'Cancelled'
+        
+        # Update assignment status
+        assignment.status = 'Demo Scheduled'
+        
+        db.session.add(new_demo)
+        db.session.commit()
+        
+        flash('Teacher reassigned and new demo scheduled!', 'success')
+        return redirect(url_for('demo_tracking'))
+    
+    # Calculate match scores for sorting teachers
+    teachers_with_scores = []
+    for teacher in teachers:
+        if teacher.id != assignment.teacher_id:  # Exclude current teacher
+            score = calculate_match_score(student, teacher)
+            teachers_with_scores.append({
+                'teacher': teacher,
+                'score': score,
+                'common_subjects': set(json.loads(student.subjects)).intersection(set(json.loads(teacher.preferred_subjects))),
+                'areas': json.loads(teacher.preferred_areas)
+            })
+    
+    # Sort teachers by match score (highest first)
+    teachers_with_scores.sort(key=lambda x: x['score'], reverse=True)
+    
+    return render_template('reassign_teacher.html', 
+                          title='Reassign Teacher', 
+                          form=form, 
+                          demo=demo, 
+                          assignment=assignment,
+                          student=student,
+                          current_teacher=assignment.teacher,
+                          recommended_teachers=teachers_with_scores[:5])
+
 # Feedback routes
 @app.route('/demo/<int:demo_id>/feedback', methods=['GET', 'POST'])
 @login_required

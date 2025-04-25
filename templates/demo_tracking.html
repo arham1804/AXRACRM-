@@ -144,6 +144,12 @@
                                                                 </button>
                                                             </form>
                                                         </li>
+                                                    {% elif demo.status == 'Cancelled' %}
+                                                        <li>
+                                                            <a class="dropdown-item text-primary" href="{{ url_for('reassign_teacher', demo_id=demo.id) }}">
+                                                                <i data-feather="refresh-cw" class="feather-sm me-1"></i> Reassign Teacher
+                                                            </a>
+                                                        </li>
                                                     {% elif demo.status == 'Completed' and not demo.feedback %}
                                                         <li>
                                                             <a class="dropdown-item" href="{{ url_for('provide_feedback', demo_id=demo.id) }}">
