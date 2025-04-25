@@ -1,0 +1,163 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">Quick Communication</h3>
+                    <p class="card-text">
+                        Send a quick message to {{ recipient.name }}
+                        <span class="badge bg-primary">{{ recipient_type|title }}</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Contact Information</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><strong>Name:</strong> {{ recipient.name }}</li>
+                        <li class="list-group-item"><strong>Phone:</strong> {{ recipient.phone }}</li>
+                        
+                        {% if recipient_type == 'student' %}
+                            <li class="list-group-item"><strong>Area:</strong> {{ recipient.area }}</li>
+                            <li class="list-group-item"><strong>Class Level:</strong> {{ recipient.class_level }}</li>
+                            <li class="list-group-item">
+                                <strong>Subjects:</strong>
+                                {% for subject in recipient.get_subjects_list() %}
+                                    <span class="badge bg-secondary me-1">{{ subject }}</span>
+                                {% endfor %}
+                            </li>
+                            <li class="list-group-item"><strong>Fee:</strong> ₹{{ recipient.fee }}</li>
+                            <li class="list-group-item"><strong>Status:</strong> 
+                                {% if recipient.status == 'New' %}
+                                    <span class="badge bg-primary">New</span>
+                                {% elif recipient.status == 'Assigned' %}
+                                    <span class="badge bg-success">Assigned</span>
+                                {% elif recipient.status == 'Converted' %}
+                                    <span class="badge bg-info">Converted</span>
+                                {% elif recipient.status == 'Lost' %}
+                                    <span class="badge bg-danger">Lost</span>
+                                {% endif %}
+                            </li>
+                        {% elif recipient_type == 'teacher' %}
+                            <li class="list-group-item">
+                                <strong>Subjects:</strong>
+                                {% for subject in recipient.get_preferred_subjects_list() %}
+                                    <span class="badge bg-secondary me-1">{{ subject }}</span>
+                                {% endfor %}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Areas:</strong>
+                                {% for area in recipient.get_preferred_areas_list() %}
+                                    <span class="badge bg-info me-1">{{ area }}</span>
+                                {% endfor %}
+                            </li>
+                            <li class="list-group-item"><strong>Qualification:</strong> {{ recipient.qualification }}</li>
+                            <li class="list-group-item"><strong>Experience:</strong> {{ recipient.teaching_experience }} years</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Select Communication Template</h5>
+                </div>
+                <div class="card-body">
+                    {% if templates %}
+                        <form action="{{ url_for('send_quick_communication') }}" method="POST">
+                            <input type="hidden" name="recipient_type" value="{{ recipient_type }}">
+                            <input type="hidden" name="recipient_id" value="{{ recipient.id }}">
+                            
+                            <div class="mb-3">
+                                <label for="templateSelect" class="form-label">Select Template</label>
+                                <select name="template_id" id="templateSelect" class="form-select" required>
+                                    <option value="">Choose a template...</option>
+                                    {% for template in templates %}
+                                        <option value="{{ template.id }}">{{ template.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div id="templatePreview" class="mt-4 d-none">
+                                <h5>Template Preview</h5>
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6 id="previewName" class="card-title"></h6>
+                                        <p id="previewDescription" class="card-text text-muted"></p>
+                                        <div id="previewContent" class="border p-3 rounded bg-light" style="white-space: pre-wrap;">
+                                            Select a template to see preview
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="alert alert-info mt-3">
+                                    <i class="fas fa-info-circle"></i> This is just a template preview. Variables will be automatically replaced with actual values when sent.
+                                </div>
+                            </div>
+                            
+                            <div class="text-end mt-3">
+                                <a href="{{ url_for('student_leads' if recipient_type == 'student' else 'teachers') }}" class="btn btn-secondary">Cancel</a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane"></i> Send Message
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <script>
+                            // Store template data for preview
+                            const templates = {
+                                {% for template in templates %}
+                                "{{ template.id }}": {
+                                    name: "{{ template.name }}",
+                                    type: "{{ template.type }}",
+                                    category: "{{ template.category }}",
+                                    content: `{{ template.content }}`
+                                },
+                                {% endfor %}
+                            };
+                            
+                            document.addEventListener('DOMContentLoaded', function() {
+                                const templateSelect = document.getElementById('templateSelect');
+                                const templatePreview = document.getElementById('templatePreview');
+                                const previewName = document.getElementById('previewName');
+                                const previewDescription = document.getElementById('previewDescription');
+                                const previewContent = document.getElementById('previewContent');
+                                
+                                templateSelect.addEventListener('change', function() {
+                                    const selectedTemplate = templateSelect.value;
+                                    
+                                    if (selectedTemplate && templates[selectedTemplate]) {
+                                        const template = templates[selectedTemplate];
+                                        previewName.textContent = template.name;
+                                        previewDescription.textContent = `${template.type.toUpperCase()} template - ${template.category.replace('_', ' ')}`;
+                                        previewContent.textContent = template.content;
+                                        templatePreview.classList.remove('d-none');
+                                    } else {
+                                        templatePreview.classList.add('d-none');
+                                    }
+                                });
+                            });
+                        </script>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i> No communication templates available for {{ recipient_type }}s.
+                            <a href="{{ url_for('new_communication_template') }}">Create a template first</a>.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -91,6 +91,10 @@
                                                     </a></li>
                                                     {% endif %}
                                                     
+                                                    <li><a class="dropdown-item" href="{{ url_for('quick_communication', type='student', id=lead.id) }}">
+                                                        <i data-feather="message-circle" class="feather-sm me-1"></i> Quick Message
+                                                    </a></li>
+                                                    
                                                     <li><hr class="dropdown-divider"></li>
                                                     
                                                     <li>

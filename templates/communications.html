@@ -1,0 +1,154 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <h3 class="card-title mb-0">All Communications</h3>
+                    <div>
+                        <a href="{{ url_for('send_communication') }}" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> New Communication
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Recipient</th>
+                                    <th>Type</th>
+                                    <th>Subject</th>
+                                    <th>Status</th>
+                                    <th>Sent At</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if communications %}
+                                    {% for communication in communications %}
+                                    <tr>
+                                        <td>{{ communication.communication_id }}</td>
+                                        <td>
+                                            {{ communication.recipient_name }}<br>
+                                            <small class="text-muted">{{ communication.recipient }}</small>
+                                            {% if communication.student_id %}
+                                                <span class="badge bg-info">Student</span>
+                                            {% elif communication.teacher_id %}
+                                                <span class="badge bg-success">Teacher</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Custom</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if communication.type == 'email' %}
+                                                <span class="badge bg-primary">Email</span>
+                                            {% elif communication.type == 'sms' %}
+                                                <span class="badge bg-success">SMS</span>
+                                            {% elif communication.type == 'whatsapp' %}
+                                                <span class="badge bg-info">WhatsApp</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {{ communication.subject }}
+                                        </td>
+                                        <td>
+                                            {% if communication.status == 'Sent' %}
+                                                <span class="badge bg-success">Sent</span>
+                                            {% elif communication.status == 'Failed' %}
+                                                <span class="badge bg-danger">Failed</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">Pending</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if communication.sent_at %}
+                                                {{ communication.sent_at.strftime('%d/%m/%Y %H:%M') }}
+                                            {% else %}
+                                                <span class="text-muted">Not sent yet</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#viewCommsModal-{{ communication.id }}">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    <!-- View Communication Modal -->
+                                    <div class="modal fade" id="viewCommsModal-{{ communication.id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-lg">
+                                            <div class="modal-content">
+                                                <div class="modal-header bg-primary text-white">
+                                                    <h5 class="modal-title">Communication Details</h5>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <h6>Communication Details:</h6>
+                                                        <ul class="list-group list-group-flush mb-3">
+                                                            <li class="list-group-item"><strong>ID:</strong> {{ communication.communication_id }}</li>
+                                                            <li class="list-group-item"><strong>Type:</strong> {{ communication.type|title }}</li>
+                                                            <li class="list-group-item">
+                                                                <strong>Recipient:</strong> {{ communication.recipient_name }} ({{ communication.recipient }})
+                                                                {% if communication.student_id %}
+                                                                    <span class="badge bg-info">Student</span>
+                                                                {% elif communication.teacher_id %}
+                                                                    <span class="badge bg-success">Teacher</span>
+                                                                {% else %}
+                                                                    <span class="badge bg-secondary">Custom</span>
+                                                                {% endif %}
+                                                            </li>
+                                                            <li class="list-group-item"><strong>Status:</strong> {{ communication.status }}</li>
+                                                            <li class="list-group-item"><strong>Created:</strong> {{ communication.created_at.strftime('%d/%m/%Y %H:%M') }}</li>
+                                                            <li class="list-group-item"><strong>Sent:</strong> 
+                                                                {% if communication.sent_at %}
+                                                                    {{ communication.sent_at.strftime('%d/%m/%Y %H:%M') }}
+                                                                {% else %}
+                                                                    <span class="text-muted">Not sent yet</span>
+                                                                {% endif %}
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                    {% if communication.type == 'email' %}
+                                                    <div class="mb-3">
+                                                        <h6>Subject:</h6>
+                                                        <p class="border p-2 rounded bg-light">{{ communication.subject }}</p>
+                                                    </div>
+                                                    {% endif %}
+                                                    <div>
+                                                        <h6>Content:</h6>
+                                                        <div class="border p-2 rounded bg-light" style="white-space: pre-wrap;">{{ communication.content }}</div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="7" class="text-center">No communications found. <a href="{{ url_for('send_communication') }}">Send your first communication</a>.</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
