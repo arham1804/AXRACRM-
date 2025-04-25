@@ -33,10 +33,34 @@
                                 <span>{{ demo.scheduled_date.strftime('%Y-%m-%d %H:%M') }}</span>
                             </li>
                             <li class="list-group-item d-flex justify-content-between">
-                                <span class="fw-bold">Email Recipients:</span>
-                                <span>axra.tutors@gmail.com</span>
+                                <span class="fw-bold">Contact Numbers:</span>
+                                <span>Student: {{ demo.assignment.student.phone }} | Teacher: {{ demo.assignment.teacher.phone }}</span>
                             </li>
                         </ul>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h6 class="text-muted">Email Preview</h6>
+                        <div class="card border">
+                            <div class="card-header bg-light">
+                                <div><strong>To:</strong> {{ demo.assignment.student.name }}</div>
+                                <div><strong>Subject:</strong> Reminder: Tuition Demo with {{ demo.assignment.teacher.name }} on {{ demo.scheduled_date.strftime('%Y-%m-%d %H:%M') }}</div>
+                            </div>
+                            <div class="card-body">
+                                <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                                    <p>Dear <strong>{{ demo.assignment.student.name }}</strong>,</p>
+                                    <p>This is a friendly reminder about your upcoming tuition demo session:</p>
+                                    <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                                        <p><strong>Teacher:</strong> {{ demo.assignment.teacher.name }}</p>
+                                        <p><strong>Date & Time:</strong> {{ demo.scheduled_date.strftime('%Y-%m-%d %H:%M') }}</p>
+                                        <p><strong>Subjects:</strong> {{ ", ".join(demo.assignment.student.get_subjects_list()) }}</p>
+                                    </div>
+                                    <p>Please ensure you're prepared and on time for the session. This demo will help determine if the teacher is a good fit for your learning needs.</p>
+                                    <p>If you need to reschedule or have any questions, please contact us immediately.</p>
+                                    <p>Best regards,<br>Axra Tutors Team</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     
                     <form method="POST" action="{{ url_for('send_reminder', demo_id=demo.id) }}">
@@ -49,12 +73,12 @@
                         
                         <div class="alert alert-info">
                             <i data-feather="info" class="feather-sm me-2"></i>
-                            <span>This will record an email reminder as sent to both student and teacher.</span>
+                            <span>This will record a reminder notification for this demo session.</span>
                         </div>
                         
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary">
-                                <i data-feather="send" class="feather-sm me-1"></i> Record Email Reminder
+                                <i data-feather="bell" class="feather-sm me-1"></i> Record Reminder
                             </button>
                         </div>
                     </form>

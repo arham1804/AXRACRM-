@@ -185,6 +185,8 @@ def edit_teacher(teacher_id):
         teacher.qualification = form.qualification.data
         teacher.stream = form.stream.data
         teacher.board = form.board.data
+        teacher.teaching_experience = form.teaching_experience.data
+        teacher.teaching_experience_details = form.teaching_experience_details.data
         
         db.session.commit()
         flash('Teacher updated successfully!', 'success')
@@ -201,6 +203,8 @@ def edit_teacher(teacher_id):
         form.qualification.data = teacher.qualification
         form.stream.data = teacher.stream
         form.board.data = teacher.board
+        form.teaching_experience.data = teacher.teaching_experience
+        form.teaching_experience_details.data = teacher.teaching_experience_details
     
     return render_template('teacher_form.html', title='Edit Teacher', form=form)
 
@@ -328,13 +332,14 @@ def send_reminder(demo_id):
     if request.method == 'POST':
         notes = request.form.get('reminder_notes', '')
         
-        # Simulate sending an email
+        # Get details for the email record
         student_name = demo.assignment.student.name
         teacher_name = demo.assignment.teacher.name
         scheduled_date = demo.scheduled_date.strftime("%Y-%m-%d %H:%M")
         
-        # Log the email simulation
-        log_message = f"Email reminder sent to {student_name} and {teacher_name} for demo on {scheduled_date}."
+        # Create a record of the email (without actually sending it)
+        # This allows the system to work without requiring an API key
+        log_message = f"Email reminder noted for {student_name} and {teacher_name} for demo on {scheduled_date}."
         if notes:
             log_message += f" Notes: {notes}"
         
@@ -346,7 +351,7 @@ def send_reminder(demo_id):
         # Add to database
         db.session.commit()
         
-        flash('Email reminder recorded successfully!', 'success')
+        flash('Reminder recorded and notification details saved!', 'success')
         logging.info(log_message)
         return redirect(url_for('demo_tracking'))
     
