@@ -158,17 +158,3 @@ class FeedbackForm(FlaskForm):
                                  validators=[DataRequired()])
     comments = TextAreaField('Comments')
     submit = SubmitField('Submit Feedback')
-
-class ChangeTeacherForm(FlaskForm):
-    teacher_id = SelectField('Select New Teacher', coerce=int, validators=[DataRequired()])
-    reason = SelectField('Reason for Change', 
-                       choices=[
-                           ('Unavailability', 'Teacher Unavailable'),
-                           ('Better Match', 'Better Subject Match'),
-                           ('Student Request', 'Student Requested Change'),
-                           ('Area Issue', 'Location/Area Conflict'),
-                           ('Other', 'Other Reason')
-                       ],
-                       validators=[DataRequired()])
-    comments = TextAreaField('Additional Comments')
-    submit = SubmitField('Change Teacher')

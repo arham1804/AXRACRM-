@@ -1,6 +1,6 @@
 from app import app, db
 from flask import render_template, redirect, url_for, flash, request, jsonify
-from forms import LoginForm, StudentLeadForm, TeacherForm, AssignTeacherForm, ScheduleDemoForm, FeedbackForm, ChangeTeacherForm
+from forms import LoginForm, StudentLeadForm, TeacherForm, AssignTeacherForm, ScheduleDemoForm, FeedbackForm
 from models import Admin, Student, Teacher, TuitionAssignment, Demo, Feedback
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
@@ -55,12 +55,6 @@ def student_leads():
     else:
         leads = Student.query.order_by(Student.created_at.desc()).all()
     return render_template('student_leads.html', title='Student Leads', leads=leads, current_filter=status_filter)
-
-@app.route('/student-lead/<int:lead_id>')
-@login_required
-def student_detail(lead_id):
-    student = Student.query.get_or_404(lead_id)
-    return render_template('student_detail.html', title=f'Student: {student.name}', student=student)
 
 @app.route('/student-lead/new', methods=['GET', 'POST'])
 @login_required
@@ -329,56 +323,6 @@ def demo_tracking():
     else:
         demos = Demo.query.order_by(Demo.scheduled_date).all()
     return render_template('demo_tracking.html', title='Demo Tracking', demos=demos, current_filter=status_filter)
-
-@app.route('/assignment/<int:assignment_id>/change-teacher', methods=['GET', 'POST'])
-@login_required
-def change_teacher(assignment_id):
-    assignment = TuitionAssignment.query.get_or_404(assignment_id)
-    student = assignment.student
-    current_teacher = assignment.teacher
-    form = ChangeTeacherForm()
-    
-    # Find suitable teachers
-    suitable_teachers = []
-    all_teachers = Teacher.query.filter_by(status='Active').all()
-    
-    for teacher in all_teachers:
-        if teacher.id != current_teacher.id:  # Exclude current teacher
-            match_score = calculate_match_score(student, teacher)
-            suitable_teachers.append({
-                'teacher': teacher,
-                'match_score': match_score
-            })
-    
-    # Sort by match score (highest first)
-    suitable_teachers.sort(key=lambda x: x['match_score'], reverse=True)
-    
-    # Update form choices
-    form.teacher_id.choices = [(t['teacher'].id, f"{t['teacher'].name} - {t['teacher'].teacher_id} (Match: {t['match_score']}%)") 
-                             for t in suitable_teachers]
-    
-    if form.validate_on_submit():
-        new_teacher = Teacher.query.get(form.teacher_id.data)
-        
-        # Log the change
-        flash_message = f'Teacher changed from {current_teacher.name} to {new_teacher.name} for student {student.name}.'
-        if form.comments.data:
-            flash_message += f' Reason: {form.reason.data} - {form.comments.data}'
-        else:
-            flash_message += f' Reason: {form.reason.data}'
-            
-        # Update assignment with new teacher
-        assignment.teacher_id = new_teacher.id
-        
-        # Add a notification (this can be expanded to a full notification model)
-        db.session.commit()
-        flash(flash_message, 'success')
-        return redirect(url_for('assignments'))
-    
-    return render_template('change_teacher.html', title='Change Teacher', 
-                         form=form, assignment=assignment, 
-                         student=student, current_teacher=current_teacher,
-                         suitable_teachers=suitable_teachers)
 
 @app.route('/demo/<int:demo_id>/send-reminder', methods=['GET', 'POST'])
 @login_required
