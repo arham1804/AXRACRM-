@@ -3,38 +3,46 @@
  * A utility to show toast notifications for various actions
  */
 
+// Create toast notification global instance
+let toastNotification;
+
+// Initialize when document is ready
+jQueryReady(function() {
+    // Create and initialize the global instance
+    toastNotification = new ToastNotification();
+    toastNotification.init();
+});
+
 class ToastNotification {
     constructor(options = {}) {
-        this.container = options.container || '#toastContainer';
-        this.defaultDuration = options.duration || 5000; // 5 seconds
-        this.position = options.position || 'bottom-end';
-        this.maxToasts = options.maxToasts || 3;
+        this.defaultOptions = {
+            container: '#toastContainer',
+            defaultDuration: 3000,
+            defaultType: 'info',
+            defaultAutohide: true,
+            position: 'bottom-end',
+            maxToasts: 5
+        };
         
-        // Initialize
-        this.init();
+        this.options = { ...this.defaultOptions, ...options };
+        this.toastCount = 0;
+        this.toastQueue = [];
     }
     
     init() {
-        // Create container if it doesn't exist
-        if ($(this.container).length === 0) {
-            $('body').append(`<div id="${this.container.replace('#', '')}" class="toast-container position-fixed ${this.position} p-3"></div>`);
+        // Ensure container exists
+        const container = document.querySelector(this.options.container);
+        if (!container) {
+            console.error('Toast container not found:', this.options.container);
+            return;
         }
         
-        // Ensure container has the right classes
-        $(this.container).addClass('toast-container position-fixed p-3');
-        
-        // Apply position classes
-        if (this.position === 'bottom-end' || this.position === 'bottom-right') {
-            $(this.container).addClass('bottom-0 end-0');
-        } else if (this.position === 'bottom-start' || this.position === 'bottom-left') {
-            $(this.container).addClass('bottom-0 start-0');
-        } else if (this.position === 'top-end' || this.position === 'top-right') {
-            $(this.container).addClass('top-0 end-0');
-        } else if (this.position === 'top-start' || this.position === 'top-left') {
-            $(this.container).addClass('top-0 start-0');
-        } else if (this.position === 'middle-center') {
-            $(this.container).addClass('top-50 start-50 translate-middle');
+        // Set container position if specified
+        if (this.options.position) {
+            container.classList.add('position-fixed', this.options.position);
         }
+        
+        console.log('Toast notification system initialized');
     }
     
     /**
@@ -48,79 +56,111 @@ class ToastNotification {
      * @param {String} options.icon - Custom icon (feather icon name)
      */
     show(options = {}) {
-        const { 
-            title = 'Notification',
-            message = '',
-            type = 'info',
-            duration = this.defaultDuration,
-            autohide = true,
-            icon = null
-        } = options;
+        // Get container
+        const container = document.querySelector(this.options.container);
+        if (!container) return;
         
-        // Check if we need to remove old toasts
-        const toasts = $(this.container).children('.toast');
-        if (toasts.length >= this.maxToasts) {
-            // Remove the oldest toast
-            $(toasts[0]).remove();
-        }
+        // Process options
+        const config = {
+            title: options.title || 'Notification',
+            message: options.message || '',
+            type: options.type || this.options.defaultType,
+            duration: options.duration || this.options.defaultDuration,
+            autohide: options.autohide !== undefined ? options.autohide : this.options.defaultAutohide,
+            icon: options.icon || null
+        };
         
-        // Determine icon and color based on type
-        let iconName = icon;
-        let bgClass = '';
-        
-        if (!iconName) {
-            switch (type) {
+        // Get icon based on type
+        let icon = config.icon;
+        if (!icon) {
+            switch (config.type) {
                 case 'success':
-                    iconName = 'check-circle';
-                    bgClass = 'bg-success';
+                    icon = 'check-circle';
                     break;
                 case 'error':
-                    iconName = 'alert-circle';
-                    bgClass = 'bg-danger';
+                    icon = 'alert-circle';
                     break;
                 case 'warning':
-                    iconName = 'alert-triangle';
-                    bgClass = 'bg-warning';
+                    icon = 'alert-triangle';
                     break;
                 case 'info':
                 default:
-                    iconName = 'info';
-                    bgClass = 'bg-info';
+                    icon = 'info';
                     break;
             }
         }
         
-        // Create a unique ID for this toast
+        // Create toast ID
         const toastId = 'toast-' + Date.now();
         
-        // Create the toast HTML
-        const toastHtml = `
-            <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true"
-                 data-bs-autohide="${autohide}" data-bs-delay="${duration}">
-                <div class="toast-header ${bgClass} text-white">
-                    <i data-feather="${iconName}" class="me-2"></i>
-                    <strong class="me-auto">${title}</strong>
+        // Get color class based on type
+        let colorClass = 'bg-primary';
+        switch (config.type) {
+            case 'success':
+                colorClass = 'bg-success';
+                break;
+            case 'error':
+                colorClass = 'bg-danger';
+                break;
+            case 'warning':
+                colorClass = 'bg-warning text-dark';
+                break;
+            case 'info':
+                colorClass = 'bg-info text-dark';
+                break;
+        }
+        
+        // Create toast HTML
+        const toast = document.createElement('div');
+        toast.id = toastId;
+        toast.className = 'toast fade-in mb-2 shadow-sm';
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        
+        toast.innerHTML = `
+            <div class="toast-header ${colorClass} text-white">
+                <div class="d-flex align-items-center flex-grow-1">
+                    <i data-feather="${icon}" class="feather-sm me-2"></i>
+                    <strong class="me-auto">${config.title}</strong>
                     <small>${this.getTimeString()}</small>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
                 </div>
-                <div class="toast-body">
-                    ${message}
-                </div>
+                <button type="button" class="btn-close btn-close-white me-0" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                ${config.message}
             </div>
         `;
         
-        // Add the toast to the container
-        $(this.container).append(toastHtml);
+        // Manage toast count
+        if (container.childElementCount >= this.options.maxToasts) {
+            // Remove oldest toast
+            container.removeChild(container.firstChild);
+        }
         
-        // Initialize Feather icons
-        feather.replace();
+        // Add toast to container
+        container.appendChild(toast);
         
-        // Initialize and show the toast
-        const toastElement = new bootstrap.Toast(document.getElementById(toastId));
-        toastElement.show();
+        // Initialize feather icons if available
+        if (typeof feather !== 'undefined') {
+            feather.replace();
+        }
         
-        // Return the toast element for further manipulation
-        return toastElement;
+        // Create Bootstrap Toast instance
+        const toastInstance = new bootstrap.Toast(toast, {
+            autohide: config.autohide,
+            delay: config.duration
+        });
+        
+        // Show the toast
+        toastInstance.show();
+        
+        // Remove toast once hidden
+        toast.addEventListener('hidden.bs.toast', function() {
+            container.removeChild(toast);
+        });
+        
+        return toastId;
     }
     
     /**
@@ -142,7 +182,7 @@ class ToastNotification {
             title: title,
             message: message,
             type: 'error',
-            autohide: false  // Errors often need user attention
+            duration: 5000 // Errors stay longer
         });
     }
     
@@ -153,7 +193,8 @@ class ToastNotification {
         return this.show({
             title: title,
             message: message,
-            type: 'warning'
+            type: 'warning',
+            duration: 4000
         });
     }
     
@@ -173,24 +214,30 @@ class ToastNotification {
      */
     getTimeString() {
         const now = new Date();
-        const hours = now.getHours().toString().padStart(2, '0');
+        let hours = now.getHours();
         const minutes = now.getMinutes().toString().padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
         
-        return `${hours}:${minutes}`;
+        hours = hours % 12;
+        hours = hours ? hours : 12; // Convert 0 to 12
+        
+        return hours + ':' + minutes + ' ' + ampm;
     }
     
     /**
      * Clear all toasts
      */
     clearAll() {
-        $(this.container).empty();
+        const container = document.querySelector(this.options.container);
+        if (!container) return;
+        
+        // Get all toasts
+        const toasts = container.querySelectorAll('.toast');
+        toasts.forEach(toast => {
+            const toastInstance = bootstrap.Toast.getInstance(toast);
+            if (toastInstance) {
+                toastInstance.hide();
+            }
+        });
     }
-}
-
-// Global instance for easy access
-window.toastNotification = new ToastNotification();
-
-// Export for module support
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = ToastNotification;
 }

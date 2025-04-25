@@ -538,24 +538,51 @@ def delete_notification(notification_id):
 @app.route('/api/notifications/unread')
 @login_required
 def api_unread_notifications():
-    # Run background checks for new notifications
-    Notification.check_unassigned_leads()
-    Notification.check_upcoming_demos()
-    
-    unread = Notification.get_unread_notifications()
-    notifications_data = [{
-        'id': n.id,
-        'title': n.title,
-        'message': n.message,
-        'type': n.notification_type,
-        'is_urgent': n.is_urgent,
-        'created_at': n.created_at.strftime('%Y-%m-%d %H:%M')
-    } for n in unread]
-    
-    return jsonify({
-        'count': len(notifications_data),
-        'notifications': notifications_data
-    })
+    try:
+        # Run background checks for new notifications
+        Notification.check_unassigned_leads()
+        Notification.check_upcoming_demos()
+        
+        unread = Notification.get_unread_notifications()
+        
+        # Handle case where unread might be None
+        if unread is None:
+            return jsonify({
+                'count': 0,
+                'notifications': []
+            })
+        
+        notifications_data = []
+        for n in unread:
+            try:
+                # Format datetime safely
+                created_at = n.created_at.strftime('%Y-%m-%d %H:%M') if n.created_at else ''
+                
+                notifications_data.append({
+                    'id': n.id,
+                    'title': n.title or '',
+                    'message': n.message or '',
+                    'type': n.notification_type or '',
+                    'is_urgent': bool(n.is_urgent),
+                    'created_at': created_at
+                })
+            except Exception as e:
+                # Log the error but continue processing other notifications
+                app.logger.error(f"Error processing notification {n.id}: {str(e)}")
+                continue
+        
+        return jsonify({
+            'count': len(notifications_data),
+            'notifications': notifications_data
+        })
+    except Exception as e:
+        # Log the error and return an empty response
+        app.logger.error(f"Error in notifications API: {str(e)}")
+        return jsonify({
+            'count': 0,
+            'notifications': [],
+            'error': 'An error occurred while fetching notifications'
+        }), 500
 
 # Demo reassignment route for failed demos or unattended demos
 @app.route('/demo/<int:demo_id>/reassign', methods=['GET', 'POST'])
