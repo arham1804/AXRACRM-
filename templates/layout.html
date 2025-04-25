@@ -299,56 +299,37 @@
         feather.replace();
     </script>
     
-    <!-- jQuery (required for Bootstrap plugins and our custom scripts) -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-    <!-- Core Utility Scripts -->
-    <script src="{{ url_for('static', filename='js/formValidation.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/toastNotification.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/exportUtility.js') }}"></script>
-
-    <!-- Custom Script Initialization -->
+    <!-- Custom Scripts -->
     <script>
-        // Use both jQuery and vanilla JS for maximum compatibility
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM fully loaded');
-            loadComponents();
+        // Wait for jQuery to be ready before loading custom scripts
+        jQueryReady(function() {
+            // Load scripts sequentially in order of dependency
+            $.getScript("{{ url_for('static', filename='js/formValidation.js') }}")
+                .then(function() {
+                    return $.getScript("{{ url_for('static', filename='js/toastNotification.js') }}");
+                })
+                .then(function() {
+                    return $.getScript("{{ url_for('static', filename='js/exportUtility.js') }}");
+                })
+                .then(function() {
+                    // Once all utility scripts are loaded, initialize any page-specific scripts
+                    if (typeof initializePage === 'function') {
+                        initializePage();
+                    }
+                    
+                    console.log('All utility scripts loaded successfully');
+                })
+                .catch(function(error) {
+                    console.error('Error loading scripts:', error);
+                });
         });
-
-        // Also use jQuery ready handler for backward compatibility
-        $(document).ready(function() {
-            console.log('jQuery is loaded successfully');
-            loadComponents();
-        });
-        
-        // Only load components once
-        let componentsLoaded = false;
-        
-        function loadComponents() {
-            if (componentsLoaded) return;
-            componentsLoaded = true;
-            
-            try {
-                // Initialize any page-specific scripts
-                if (typeof initializePage === 'function') {
-                    initializePage();
-                }
-                
-                // Setup mobile sidebar toggle
-                setupMobileSidebar();
-                
-                console.log('All utility scripts loaded successfully');
-            } catch (error) {
-                console.error('Error initializing components:', error);
-            }
-        }
     </script>
 
     <!-- Mobile sidebar toggle -->
     <script>
-        function setupMobileSidebar() {
-            // Mobile sidebar toggle using jQuery
-            $('#mobileSidebarToggle').on('click', function() {
+        $(document).ready(function() {
+            // Mobile sidebar toggle
+            $('#mobileSidebarToggle').click(function() {
                 $('#sidebarNav').toggleClass('show');
                 
                 // Toggle icon between menu and x
@@ -361,7 +342,7 @@
             });
             
             // Close sidebar when clicking on a link (for mobile)
-            $('#sidebarNav .nav-link').on('click', function() {
+            $('#sidebarNav .nav-link').click(function() {
                 if ($(window).width() < 768) {
                     $('#sidebarNav').removeClass('show');
                     $('#mobileSidebarToggle').find('svg').remove();
@@ -369,7 +350,7 @@
                     feather.replace();
                 }
             });
-        }
+        });
     </script>
     
     <!-- Notification Scripts -->

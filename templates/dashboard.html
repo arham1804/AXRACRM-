@@ -297,57 +297,34 @@
 {% endblock %}
 
 {% block scripts %}
-<!-- Toast notification system - must be loaded first for other scripts to use -->
-<script src="{{ url_for('static', filename='js/toastNotification.js') }}"></script>
-
-<!-- Export utility - needs to be loaded before dashboard.js -->
-<script src="{{ url_for('static', filename='js/exportUtility.js') }}"></script>
-
-<!-- Chart.js library -->
+<!-- Chart.js library first -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 
-<!-- Dashboard scripts - load after dependencies -->
+<!-- Dashboard scripts -->
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 
-<!-- Load scripts in sequence and handle dependencies -->
+<!-- Initialize charts after DOM is fully loaded -->
 <script>
-    // Ensure scripts are loaded in correct order
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM fully loaded, checking script dependencies...');
-        
-        // Track loaded scripts
-        const dependencies = {
-            toastNotification: typeof ToastNotification !== 'undefined',
-            exportUtility: typeof ExportUtility !== 'undefined',
-            chartJs: typeof Chart !== 'undefined',
-            dashboard: typeof initializePage === 'function'
-        };
-        
-        console.log('Dependencies status:', dependencies);
-        
-        // Verify all dependencies are loaded
-        if (dependencies.toastNotification && 
-            dependencies.exportUtility && 
-            dependencies.chartJs && 
-            dependencies.dashboard) {
+    $(document).ready(function() {
+        // Make sure Chart.js is loaded before initializing
+        if (typeof Chart !== 'undefined') {
+            console.log('Chart.js is loaded, initializing charts...');
             
-            console.log('All utility scripts loaded successfully');
-            
-            // Now it's safe to initialize the page
-            if (!window.dashboardInitialized) {
-                window.dashboardInitialized = true;
-                initializePage();
+            try {
+                // Initialize page if not already done
+                if (typeof initializePage === 'function') {
+                    if (!window.dashboardInitialized) {
+                        window.dashboardInitialized = true;
+                        initializePage();
+                    }
+                } else {
+                    console.error('initializePage function not found');
+                }
+            } catch (error) {
+                console.error('Error initializing dashboard charts:', error);
             }
         } else {
-            // Handle missing dependencies
-            const missing = Object.keys(dependencies).filter(key => !dependencies[key]);
-            console.error('Missing script dependencies:', missing);
-            
-            // Still try to initialize what we can
-            if (dependencies.dashboard) {
-                window.dashboardInitialized = true;
-                initializePage();
-            }
+            console.error('Chart.js library not loaded!');
         }
     });
 </script>
