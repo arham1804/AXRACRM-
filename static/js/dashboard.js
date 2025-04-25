@@ -23,14 +23,27 @@ function initializePage() {
     }
 }
 
-// Also define jQuery ready handler for backward compatibility
-$(document).ready(function() {
+// Define document ready handler using vanilla JavaScript for compatibility
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM fully loaded and parsed');
     // If not already initialized, try to initialize
     if (typeof initializePage === 'function' && !window.dashboardInitialized) {
         window.dashboardInitialized = true;
         initializePage();
     }
 });
+
+// Also define jQuery ready handler if jQuery is available (for backward compatibility)
+if (typeof jQuery !== 'undefined') {
+    jQuery(document).ready(function($) {
+        console.log('jQuery document ready fired');
+        // If not already initialized by the DOMContentLoaded event, try to initialize
+        if (typeof initializePage === 'function' && !window.dashboardInitialized) {
+            window.dashboardInitialized = true;
+            initializePage();
+        }
+    });
+}
 
 // Lead Status Chart with Nawabi styling
 function initLeadStatusChart() {

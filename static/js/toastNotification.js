@@ -1,243 +1,334 @@
 /**
- * Toast Notification System for Axra Tutor CRM
- * A utility to show toast notifications for various actions
+ * Elegant Toast Notification System for Axra Tutor CRM
+ * Provides beautiful, customizable notifications in the Nawabi style
  */
 
-// Create toast notification global instance
-let toastNotification;
-
-// Initialize when document is ready
-jQueryReady(function() {
-    // Create and initialize the global instance
-    toastNotification = new ToastNotification();
-    toastNotification.init();
-});
-
+// Create the ToastNotification class
 class ToastNotification {
     constructor(options = {}) {
-        this.defaultOptions = {
-            container: '#toastContainer',
-            defaultDuration: 3000,
-            defaultType: 'info',
-            defaultAutohide: true,
-            position: 'bottom-end',
-            maxToasts: 5
+        // Default options
+        this.options = {
+            position: options.position || 'top-right',
+            duration: options.duration || 3000,
+            maxVisible: options.maxVisible || 5,
+            container: options.container || document.body,
+            theme: options.theme || 'light'
         };
         
-        this.options = { ...this.defaultOptions, ...options };
-        this.toastCount = 0;
-        this.toastQueue = [];
+        // Create toast container if it doesn't exist
+        this.createContainer();
+        
+        // Queue to manage toasts
+        this.queue = [];
     }
     
-    init() {
-        // Ensure container exists
-        const container = document.querySelector(this.options.container);
+    // Create the toast container
+    createContainer() {
+        // Check if container already exists
+        let container = document.querySelector('.toast-container-' + this.options.position);
+        
         if (!container) {
-            console.error('Toast container not found:', this.options.container);
-            return;
-        }
-        
-        // Set container position if specified
-        if (this.options.position) {
-            container.classList.add('position-fixed', this.options.position);
-        }
-        
-        console.log('Toast notification system initialized');
-    }
-    
-    /**
-     * Show a toast notification
-     * @param {Object} options - Configuration options
-     * @param {String} options.title - Title of the toast
-     * @param {String} options.message - Message content
-     * @param {String} options.type - Type of toast: 'success', 'error', 'warning', 'info'
-     * @param {Number} options.duration - Duration in ms
-     * @param {Boolean} options.autohide - Whether to auto-hide the toast
-     * @param {String} options.icon - Custom icon (feather icon name)
-     */
-    show(options = {}) {
-        // Get container
-        const container = document.querySelector(this.options.container);
-        if (!container) return;
-        
-        // Process options
-        const config = {
-            title: options.title || 'Notification',
-            message: options.message || '',
-            type: options.type || this.options.defaultType,
-            duration: options.duration || this.options.defaultDuration,
-            autohide: options.autohide !== undefined ? options.autohide : this.options.defaultAutohide,
-            icon: options.icon || null
-        };
-        
-        // Get icon based on type
-        let icon = config.icon;
-        if (!icon) {
-            switch (config.type) {
-                case 'success':
-                    icon = 'check-circle';
+            container = document.createElement('div');
+            container.className = 'toast-container toast-container-' + this.options.position;
+            container.style.position = 'fixed';
+            container.style.zIndex = '9999';
+            
+            // Position the container based on the position option
+            switch (this.options.position) {
+                case 'top-left':
+                    container.style.top = '1rem';
+                    container.style.left = '1rem';
                     break;
-                case 'error':
-                    icon = 'alert-circle';
+                case 'top-center':
+                    container.style.top = '1rem';
+                    container.style.left = '50%';
+                    container.style.transform = 'translateX(-50%)';
                     break;
-                case 'warning':
-                    icon = 'alert-triangle';
+                case 'top-right':
+                    container.style.top = '1rem';
+                    container.style.right = '1rem';
                     break;
-                case 'info':
-                default:
-                    icon = 'info';
+                case 'bottom-left':
+                    container.style.bottom = '1rem';
+                    container.style.left = '1rem';
+                    break;
+                case 'bottom-center':
+                    container.style.bottom = '1rem';
+                    container.style.left = '50%';
+                    container.style.transform = 'translateX(-50%)';
+                    break;
+                case 'bottom-right':
+                    container.style.bottom = '1rem';
+                    container.style.right = '1rem';
                     break;
             }
+            
+            this.options.container.appendChild(container);
         }
         
-        // Create toast ID
-        const toastId = 'toast-' + Date.now();
-        
-        // Get color class based on type
-        let colorClass = 'bg-primary';
-        switch (config.type) {
-            case 'success':
-                colorClass = 'bg-success';
-                break;
-            case 'error':
-                colorClass = 'bg-danger';
-                break;
-            case 'warning':
-                colorClass = 'bg-warning text-dark';
-                break;
-            case 'info':
-                colorClass = 'bg-info text-dark';
-                break;
-        }
-        
-        // Create toast HTML
+        this.container = container;
+    }
+    
+    // Show a success toast
+    success(message, title = 'Success') {
+        this.show(message, title, 'success');
+    }
+    
+    // Show an error toast
+    error(message, title = 'Error') {
+        this.show(message, title, 'error');
+    }
+    
+    // Show a warning toast
+    warning(message, title = 'Warning') {
+        this.show(message, title, 'warning');
+    }
+    
+    // Show an info toast
+    info(message, title = 'Info') {
+        this.show(message, title, 'info');
+    }
+    
+    // Show a toast
+    show(message, title = '', type = 'info') {
+        // Create toast element
         const toast = document.createElement('div');
-        toast.id = toastId;
-        toast.className = 'toast fade-in mb-2 shadow-sm';
+        toast.className = 'toast toast-' + type;
         toast.setAttribute('role', 'alert');
         toast.setAttribute('aria-live', 'assertive');
         toast.setAttribute('aria-atomic', 'true');
         
-        toast.innerHTML = `
-            <div class="toast-header ${colorClass} text-white">
-                <div class="d-flex align-items-center flex-grow-1">
-                    <i data-feather="${icon}" class="feather-sm me-2"></i>
-                    <strong class="me-auto">${config.title}</strong>
-                    <small>${this.getTimeString()}</small>
-                </div>
-                <button type="button" class="btn-close btn-close-white me-0" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-            <div class="toast-body">
-                ${config.message}
-            </div>
-        `;
+        // Toast styling
+        toast.style.minWidth = '250px';
+        toast.style.maxWidth = '450px';
+        toast.style.background = this.getBackgroundColor(type);
+        toast.style.color = this.getTextColor(type);
+        toast.style.borderRadius = '0.5rem';
+        toast.style.padding = '1rem';
+        toast.style.boxShadow = '0 0.5rem 1rem rgba(0, 0, 0, 0.15)';
+        toast.style.marginBottom = '0.75rem';
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-20px)';
+        toast.style.transition = 'all 0.3s ease-in-out';
+        toast.style.overflow = 'hidden';
+        toast.style.position = 'relative';
         
-        // Manage toast count
-        if (container.childElementCount >= this.options.maxToasts) {
-            // Remove oldest toast
-            container.removeChild(container.firstChild);
+        // Add a colored border on the left
+        toast.style.borderLeft = '4px solid ' + this.getBorderColor(type);
+        
+        // Create the content
+        const content = document.createElement('div');
+        content.className = 'toast-content';
+        
+        // Create title if provided
+        if (title) {
+            const titleElement = document.createElement('div');
+            titleElement.className = 'toast-title';
+            titleElement.textContent = title;
+            titleElement.style.fontWeight = 'bold';
+            titleElement.style.marginBottom = '0.25rem';
+            titleElement.style.fontSize = '1.1rem';
+            content.appendChild(titleElement);
         }
         
-        // Add toast to container
-        container.appendChild(toast);
+        // Create message
+        const messageElement = document.createElement('div');
+        messageElement.className = 'toast-message';
+        messageElement.textContent = message;
+        content.appendChild(messageElement);
         
-        // Initialize feather icons if available
-        if (typeof feather !== 'undefined') {
-            feather.replace();
+        toast.appendChild(content);
+        
+        // Create close button
+        const closeButton = document.createElement('button');
+        closeButton.className = 'toast-close';
+        closeButton.innerHTML = '&times;';
+        closeButton.style.position = 'absolute';
+        closeButton.style.top = '0.5rem';
+        closeButton.style.right = '0.5rem';
+        closeButton.style.background = 'transparent';
+        closeButton.style.border = 'none';
+        closeButton.style.color = 'inherit';
+        closeButton.style.fontSize = '1.5rem';
+        closeButton.style.cursor = 'pointer';
+        closeButton.style.opacity = '0.7';
+        closeButton.style.transition = 'opacity 0.2s ease';
+        closeButton.style.padding = '0 0.5rem';
+        
+        // Hover effect for close button
+        closeButton.addEventListener('mouseover', () => {
+            closeButton.style.opacity = '1';
+        });
+        
+        closeButton.addEventListener('mouseout', () => {
+            closeButton.style.opacity = '0.7';
+        });
+        
+        toast.appendChild(closeButton);
+        
+        // Add to container
+        this.container.appendChild(toast);
+        
+        // Add to queue
+        this.queue.push({
+            element: toast,
+            timeoutId: null
+        });
+        
+        // Animate in
+        setTimeout(() => {
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateY(0)';
+        }, 10);
+        
+        // Manage visible toasts
+        this.manageQueue();
+        
+        // Close button click event
+        closeButton.addEventListener('click', () => {
+            this.close(toast);
+        });
+        
+        // Auto-close toast after duration
+        const timeoutId = setTimeout(() => {
+            this.close(toast);
+        }, this.options.duration);
+        
+        // Update timeout ID in queue
+        const queueItem = this.queue.find(item => item.element === toast);
+        if (queueItem) {
+            queueItem.timeoutId = timeoutId;
         }
         
-        // Create Bootstrap Toast instance
-        const toastInstance = new bootstrap.Toast(toast, {
-            autohide: config.autohide,
-            delay: config.duration
-        });
-        
-        // Show the toast
-        toastInstance.show();
-        
-        // Remove toast once hidden
-        toast.addEventListener('hidden.bs.toast', function() {
-            container.removeChild(toast);
-        });
-        
-        return toastId;
+        // Return the toast element
+        return toast;
     }
     
-    /**
-     * Shorthand for showing a success toast
-     */
-    success(message, title = 'Success') {
-        return this.show({
-            title: title,
-            message: message,
-            type: 'success'
-        });
-    }
-    
-    /**
-     * Shorthand for showing an error toast
-     */
-    error(message, title = 'Error') {
-        return this.show({
-            title: title,
-            message: message,
-            type: 'error',
-            duration: 5000 // Errors stay longer
-        });
-    }
-    
-    /**
-     * Shorthand for showing a warning toast
-     */
-    warning(message, title = 'Warning') {
-        return this.show({
-            title: title,
-            message: message,
-            type: 'warning',
-            duration: 4000
-        });
-    }
-    
-    /**
-     * Shorthand for showing an info toast
-     */
-    info(message, title = 'Information') {
-        return this.show({
-            title: title,
-            message: message,
-            type: 'info'
-        });
-    }
-    
-    /**
-     * Get a formatted time string for the toast
-     */
-    getTimeString() {
-        const now = new Date();
-        let hours = now.getHours();
-        const minutes = now.getMinutes().toString().padStart(2, '0');
-        const ampm = hours >= 12 ? 'PM' : 'AM';
+    // Close a toast
+    close(toast) {
+        // Animate out
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-20px)';
         
-        hours = hours % 12;
-        hours = hours ? hours : 12; // Convert 0 to 12
-        
-        return hours + ':' + minutes + ' ' + ampm;
-    }
-    
-    /**
-     * Clear all toasts
-     */
-    clearAll() {
-        const container = document.querySelector(this.options.container);
-        if (!container) return;
-        
-        // Get all toasts
-        const toasts = container.querySelectorAll('.toast');
-        toasts.forEach(toast => {
-            const toastInstance = bootstrap.Toast.getInstance(toast);
-            if (toastInstance) {
-                toastInstance.hide();
+        // Remove from queue
+        const index = this.queue.findIndex(item => item.element === toast);
+        if (index !== -1) {
+            const item = this.queue[index];
+            
+            // Clear timeout
+            if (item.timeoutId) {
+                clearTimeout(item.timeoutId);
             }
-        });
+            
+            // Remove from queue
+            this.queue.splice(index, 1);
+        }
+        
+        // Remove from DOM after animation
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+            
+            // Manage visible toasts
+            this.manageQueue();
+        }, 300);
+    }
+    
+    // Manage queue of toasts
+    manageQueue() {
+        // If queue is longer than maxVisible, hide the overflowing toasts
+        if (this.queue.length > this.options.maxVisible) {
+            // Get overflowing toasts
+            const overflowingToasts = this.queue.slice(this.options.maxVisible);
+            
+            // Hide overflowing toasts
+            overflowingToasts.forEach(item => {
+                item.element.style.display = 'none';
+            });
+        } else {
+            // Show all toasts
+            this.queue.forEach(item => {
+                item.element.style.display = '';
+            });
+        }
+    }
+    
+    // Get background color based on type
+    getBackgroundColor(type) {
+        switch (type) {
+            case 'success':
+                return 'rgba(4, 99, 7, 0.1)'; // emerald background with low opacity
+            case 'error':
+                return 'rgba(190, 0, 50, 0.1)'; // ruby background with low opacity
+            case 'warning':
+                return 'rgba(255, 215, 0, 0.1)'; // gold background with low opacity
+            case 'info':
+                return 'rgba(106, 13, 173, 0.1)'; // purple background with low opacity
+            default:
+                return 'rgba(255, 255, 255, 0.9)';
+        }
+    }
+    
+    // Get text color based on type
+    getTextColor(type) {
+        switch (type) {
+            case 'success':
+                return '#046307'; // emerald
+            case 'error':
+                return '#be0032'; // ruby
+            case 'warning':
+                return '#d4af37'; // dark gold
+            case 'info':
+                return '#6a0dad'; // purple
+            default:
+                return '#302942'; // dark gray
+        }
+    }
+    
+    // Get border color based on type
+    getBorderColor(type) {
+        switch (type) {
+            case 'success':
+                return '#046307'; // emerald
+            case 'error':
+                return '#be0032'; // ruby
+            case 'warning':
+                return '#ffd700'; // gold
+            case 'info':
+                return '#6a0dad'; // purple
+            default:
+                return '#6a0dad'; // purple
+        }
     }
 }
+
+// Create global instance
+const toast = new ToastNotification();
+
+// Simple function to show toast (for backward compatibility)
+function showToast(message, type = 'success', title = '') {
+    switch (type) {
+        case 'success':
+            toast.success(message, title || 'Success');
+            break;
+        case 'error':
+            toast.error(message, title || 'Error');
+            break;
+        case 'warning':
+            toast.warning(message, title || 'Warning');
+            break;
+        case 'info':
+            toast.info(message, title || 'Info');
+            break;
+        default:
+            toast.success(message, title || 'Success');
+    }
+}
+
+// Make toast available globally
+window.ToastNotification = ToastNotification;
+window.toast = toast;
+window.showToast = showToast;
+
+console.log('Toast notification system loaded');
