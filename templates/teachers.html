@@ -5,17 +5,24 @@
     <!-- Page header -->
     <div class="d-flex justify-content-between align-items-center mb-4 page-header">
         <h1 class="h2">Teachers</h1>
-        <a href="{{ url_for('new_teacher') }}" class="btn btn-primary">
-            <i data-feather="plus"></i> Add New Teacher
-        </a>
+        <div class="d-flex">
+            <a href="#" class="btn btn-success me-2" id="exportBtn">
+                <i data-feather="download" class="me-1"></i> Export Data
+            </a>
+            <a href="{{ url_for('new_teacher') }}" class="btn btn-primary">
+                <i data-feather="plus" class="me-1"></i> Add New Teacher
+            </a>
+        </div>
     </div>
     
     <!-- Status filter -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">Filter by Status</h5>
+                </div>
                 <div class="card-body">
-                    <h5 class="card-title">Filter by Status</h5>
                     <div class="d-flex flex-wrap gap-2">
                         <a href="{{ url_for('teachers') }}" class="btn btn-sm {% if current_filter == '' %}btn-primary{% else %}btn-outline-primary{% endif %}">All</a>
                         <a href="{{ url_for('teachers', status='Active') }}" class="btn btn-sm {% if current_filter == 'Active' %}btn-success{% else %}btn-outline-success{% endif %}">Active</a>
@@ -145,6 +152,99 @@
                 icon.setAttribute('width', '16');
                 icon.setAttribute('height', '16');
             });
+        }
+        
+        // Export functionality
+        document.getElementById('exportBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Create dropdown for export options
+            const exportOptions = document.createElement('div');
+            exportOptions.className = 'dropdown-menu export-dropdown';
+            exportOptions.innerHTML = `
+                <a href="#" class="dropdown-item" data-format="csv">Export as CSV</a>
+                <a href="#" class="dropdown-item" data-format="pdf">Export as PDF</a>
+            `;
+            
+            // Position the dropdown
+            exportOptions.style.position = 'absolute';
+            exportOptions.style.top = (e.target.getBoundingClientRect().bottom) + 'px';
+            exportOptions.style.left = (e.target.getBoundingClientRect().left) + 'px';
+            exportOptions.style.display = 'block';
+            document.body.appendChild(exportOptions);
+            
+            // Handle export option clicks
+            const exportLinks = exportOptions.querySelectorAll('.dropdown-item');
+            exportLinks.forEach(function(link) {
+                link.addEventListener('click', function(evt) {
+                    evt.preventDefault();
+                    const format = this.getAttribute('data-format');
+                    
+                    // Call export function based on format
+                    if (format === 'csv') {
+                        exportTableToCSV();
+                    } else if (format === 'pdf') {
+                        exportTableToPDF();
+                    }
+                    
+                    // Remove dropdown
+                    document.body.removeChild(exportOptions);
+                });
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function closeDropdown(evt) {
+                if (!exportOptions.contains(evt.target) && evt.target !== e.target) {
+                    if (document.body.contains(exportOptions)) {
+                        document.body.removeChild(exportOptions);
+                    }
+                    document.removeEventListener('click', closeDropdown);
+                }
+            });
+        });
+        
+        // Function to export table to CSV
+        function exportTableToCSV() {
+            const table = document.querySelector('table');
+            let csv = [];
+            const rows = table.querySelectorAll('tr');
+            
+            for (let i = 0; i < rows.length; i++) {
+                const row = [], cols = rows[i].querySelectorAll('td, th');
+                
+                for (let j = 0; j < cols.length; j++) {
+                    // Get the text content, clean it up
+                    let cellText = cols[j].innerText.replace(/\n/g, ' ').replace(/,/g, ';');
+                    row.push('"' + cellText + '"');
+                }
+                
+                csv.push(row.join(','));
+            }
+            
+            // Download CSV file
+            downloadCSV(csv.join('\n'), 'teachers_list.csv');
+        }
+        
+        function downloadCSV(csv, filename) {
+            const csvFile = new Blob([csv], {type: 'text/csv'});
+            const downloadLink = document.createElement('a');
+            
+            // Set file name
+            downloadLink.download = filename;
+            
+            // Create download link on browser
+            if (window.URL.createObjectURL) {
+                downloadLink.href = window.URL.createObjectURL(csvFile);
+                downloadLink.style.display = 'none';
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+            }
+        }
+        
+        // Function to export table to PDF
+        function exportTableToPDF() {
+            alert('PDF export functionality will be implemented with a PDF library like jsPDF. For now, please use CSV export.');
         }
         
         // Re-initialize feather icons

@@ -133,6 +133,99 @@
             });
         }
         
+        // Export functionality
+        document.getElementById('exportBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Create dropdown for export options
+            const exportOptions = document.createElement('div');
+            exportOptions.className = 'dropdown-menu export-dropdown';
+            exportOptions.innerHTML = `
+                <a href="#" class="dropdown-item" data-format="csv">Export as CSV</a>
+                <a href="#" class="dropdown-item" data-format="pdf">Export as PDF</a>
+            `;
+            
+            // Position the dropdown
+            exportOptions.style.position = 'absolute';
+            exportOptions.style.top = (e.target.getBoundingClientRect().bottom) + 'px';
+            exportOptions.style.left = (e.target.getBoundingClientRect().left) + 'px';
+            exportOptions.style.display = 'block';
+            document.body.appendChild(exportOptions);
+            
+            // Handle export option clicks
+            const exportLinks = exportOptions.querySelectorAll('.dropdown-item');
+            exportLinks.forEach(function(link) {
+                link.addEventListener('click', function(evt) {
+                    evt.preventDefault();
+                    const format = this.getAttribute('data-format');
+                    
+                    // Call export function based on format
+                    if (format === 'csv') {
+                        exportTableToCSV();
+                    } else if (format === 'pdf') {
+                        exportTableToPDF();
+                    }
+                    
+                    // Remove dropdown
+                    document.body.removeChild(exportOptions);
+                });
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function closeDropdown(evt) {
+                if (!exportOptions.contains(evt.target) && evt.target !== e.target) {
+                    if (document.body.contains(exportOptions)) {
+                        document.body.removeChild(exportOptions);
+                    }
+                    document.removeEventListener('click', closeDropdown);
+                }
+            });
+        });
+        
+        // Function to export table to CSV
+        function exportTableToCSV() {
+            const table = document.querySelector('table');
+            let csv = [];
+            const rows = table.querySelectorAll('tr');
+            
+            for (let i = 0; i < rows.length; i++) {
+                const row = [], cols = rows[i].querySelectorAll('td, th');
+                
+                for (let j = 0; j < cols.length; j++) {
+                    // Get the text content, clean it up
+                    let cellText = cols[j].innerText.replace(/\n/g, ' ').replace(/,/g, ';');
+                    row.push('"' + cellText + '"');
+                }
+                
+                csv.push(row.join(','));
+            }
+            
+            // Download CSV file
+            downloadCSV(csv.join('\n'), 'student_leads.csv');
+        }
+        
+        function downloadCSV(csv, filename) {
+            const csvFile = new Blob([csv], {type: 'text/csv'});
+            const downloadLink = document.createElement('a');
+            
+            // Set file name
+            downloadLink.download = filename;
+            
+            // Create download link on browser
+            if (window.URL.createObjectURL) {
+                downloadLink.href = window.URL.createObjectURL(csvFile);
+                downloadLink.style.display = 'none';
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+            }
+        }
+        
+        // Function to export table to PDF
+        function exportTableToPDF() {
+            alert('PDF export functionality will be implemented with a PDF library like jsPDF. For now, please use CSV export.');
+        }
+        
         // Re-initialize feather icons
         feather.replace();
     });
