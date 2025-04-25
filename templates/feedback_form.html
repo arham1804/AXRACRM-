@@ -1,0 +1,194 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 page-header">
+        <h1 class="h2">Provide Demo Feedback</h1>
+        <a href="{{ url_for('demo_tracking') }}" class="btn btn-outline-secondary">
+            <i data-feather="arrow-left"></i> Back to Demos
+        </a>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <!-- Demo details card -->
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Demo Details</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-muted mb-2">Demo ID: {{ demo.id }}</h6>
+                    
+                    <dl class="row mt-3">
+                        <dt class="col-sm-4">Student:</dt>
+                        <dd class="col-sm-8">{{ demo.assignment.student.name }}</dd>
+                        
+                        <dt class="col-sm-4">Lead ID:</dt>
+                        <dd class="col-sm-8">{{ demo.assignment.student.lead_id }}</dd>
+                        
+                        <dt class="col-sm-4">Teacher:</dt>
+                        <dd class="col-sm-8">{{ demo.assignment.teacher.name }}</dd>
+                        
+                        <dt class="col-sm-4">Teacher ID:</dt>
+                        <dd class="col-sm-8">{{ demo.assignment.teacher.teacher_id }}</dd>
+                        
+                        <dt class="col-sm-4">Date & Time:</dt>
+                        <dd class="col-sm-8">{{ demo.scheduled_date.strftime('%Y-%m-%d %H:%M') }}</dd>
+                        
+                        <dt class="col-sm-4">Subjects:</dt>
+                        <dd class="col-sm-8">
+                            {% for subject in demo.assignment.student.get_subjects_list() %}
+                                <span class="badge bg-secondary me-1 mb-1">{{ subject }}</span>
+                            {% endfor %}
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <!-- Feedback form card -->
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Feedback Form</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="" class="needs-validation" novalidate>
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row g-3">
+                            <!-- Rating -->
+                            <div class="col-md-6">
+                                <label for="{{ form.rating.id }}" class="form-label">Demo Rating <span class="text-danger">*</span></label>
+                                {{ form.rating(class="form-control", required=true) }}
+                                {% if form.rating.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.rating.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="mt-2">
+                                    <div class="rating-stars">
+                                        {% for i in range(1, 6) %}
+                                            <i data-feather="star" class="rating-star text-muted" data-rating="{{ i }}"></i>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Student Interest -->
+                            <div class="col-md-6">
+                                <label for="{{ form.student_interest.id }}" class="form-label">Student Interest <span class="text-danger">*</span></label>
+                                {{ form.student_interest(class="form-control", required=true) }}
+                                {% if form.student_interest.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.student_interest.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">This will determine if the assignment is converted or cancelled</div>
+                            </div>
+                            
+                            <!-- Comments -->
+                            <div class="col-12">
+                                <label for="{{ form.comments.id }}" class="form-label">Additional Comments</label>
+                                {{ form.comments(class="form-control", rows=4, placeholder="Enter any additional feedback or comments about the demo session") }}
+                                {% if form.comments.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.comments.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Information about feedback -->
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <div class="d-flex">
+                                        <i data-feather="info" class="me-3 flex-shrink-0"></i>
+                                        <div>
+                                            <h6 class="alert-heading">Important</h6>
+                                            <p class="mb-0">This feedback will be used to track teacher performance and improve the assignment process. 
+                                            If the student is interested, the assignment will be automatically marked as "Converted". 
+                                            If not interested, it will be marked as "Cancelled".</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Submit Button -->
+                            <div class="col-12 mt-2">
+                                <hr>
+                                <div class="d-flex justify-content-between">
+                                    <a href="{{ url_for('demo_tracking') }}" class="btn btn-outline-secondary">Cancel</a>
+                                    {{ form.submit(class="btn btn-primary") }}
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Setup star rating visualization
+        const ratingSelect = document.getElementById('rating');
+        const stars = document.querySelectorAll('.rating-star');
+        
+        // Initialize stars based on current selection
+        updateStars(ratingSelect.value);
+        
+        // Add click handlers to stars
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                const rating = this.getAttribute('data-rating');
+                ratingSelect.value = rating;
+                updateStars(rating);
+            });
+        });
+        
+        // Update stars when select changes
+        ratingSelect.addEventListener('change', function() {
+            updateStars(this.value);
+        });
+        
+        // Function to update stars visualization
+        function updateStars(rating) {
+            stars.forEach(star => {
+                const starRating = parseInt(star.getAttribute('data-rating'));
+                
+                if (starRating <= rating) {
+                    star.classList.remove('text-muted');
+                    star.classList.add('text-warning');
+                } else {
+                    star.classList.remove('text-warning');
+                    star.classList.add('text-muted');
+                }
+            });
+        }
+        
+        // Re-initialize feather icons
+        feather.replace();
+    });
+</script>
+<style>
+    .rating-stars {
+        display: flex;
+        gap: 8px;
+    }
+    .rating-star {
+        cursor: pointer;
+        width: 24px;
+        height: 24px;
+    }
+</style>
+{% endblock %}

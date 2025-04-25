@@ -1,0 +1,149 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 page-header">
+        <h1 class="h2">Tuition Assignments</h1>
+    </div>
+    
+    <!-- Status filter -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Filter by Status</h5>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{{ url_for('assignments') }}" class="btn btn-sm {% if current_filter == '' %}btn-primary{% else %}btn-outline-primary{% endif %}">All</a>
+                        <a href="{{ url_for('assignments', status='Pending') }}" class="btn btn-sm {% if current_filter == 'Pending' %}btn-secondary{% else %}btn-outline-secondary{% endif %}">Pending</a>
+                        <a href="{{ url_for('assignments', status='Demo Scheduled') }}" class="btn btn-sm {% if current_filter == 'Demo Scheduled' %}btn-primary{% else %}btn-outline-primary{% endif %}">Demo Scheduled</a>
+                        <a href="{{ url_for('assignments', status='Converted') }}" class="btn btn-sm {% if current_filter == 'Converted' %}btn-success{% else %}btn-outline-success{% endif %}">Converted</a>
+                        <a href="{{ url_for('assignments', status='Cancelled') }}" class="btn btn-sm {% if current_filter == 'Cancelled' %}btn-danger{% else %}btn-outline-danger{% endif %}">Cancelled</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Assignments table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Tuition ID</th>
+                                    <th>Student</th>
+                                    <th>Student Info</th>
+                                    <th>Teacher</th>
+                                    <th>Teacher Info</th>
+                                    <th>Assigned Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if assignments %}
+                                    {% for assignment in assignments %}
+                                    <tr>
+                                        <td>{{ assignment.tuition_id }}</td>
+                                        <td>{{ assignment.student.name }}</td>
+                                        <td>
+                                            <small class="d-block">Class: {{ assignment.student.class_level }}</small>
+                                            <small class="d-block">Area: {{ assignment.student.area }}</small>
+                                            <small class="d-block">Subjects: 
+                                                {% set subjects = assignment.student.get_subjects_list() %}
+                                                {% if subjects|length > 2 %}
+                                                    {{ subjects[0] }}, {{ subjects[1] }}...
+                                                {% else %}
+                                                    {{ subjects|join(', ') }}
+                                                {% endif %}
+                                            </small>
+                                        </td>
+                                        <td>{{ assignment.teacher.name }}</td>
+                                        <td>
+                                            <small class="d-block">ID: {{ assignment.teacher.teacher_id }}</small>
+                                            <small class="d-block">Phone: {{ assignment.teacher.phone }}</small>
+                                            <small class="d-block">Gender: {{ assignment.teacher.gender }}</small>
+                                        </td>
+                                        <td>{{ assignment.assigned_date.strftime('%Y-%m-%d') }}</td>
+                                        <td><span class="badge status-{{ assignment.status|lower|replace(' ', '-') }}">{{ assignment.status }}</span></td>
+                                        <td>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton{{ assignment.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    Actions
+                                                </button>
+                                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ assignment.id }}">
+                                                    {% if assignment.status == 'Pending' %}
+                                                    <li>
+                                                        <a class="dropdown-item" href="{{ url_for('schedule_demo', assignment_id=assignment.id) }}">
+                                                            <i data-feather="calendar" class="feather-sm me-1"></i> Schedule Demo
+                                                        </a>
+                                                    </li>
+                                                    {% endif %}
+                                                    
+                                                    {% if assignment.demos %}
+                                                    <li>
+                                                        <a class="dropdown-item" href="{{ url_for('demo_tracking') }}">
+                                                            <i data-feather="eye" class="feather-sm me-1"></i> View Demos
+                                                        </a>
+                                                    </li>
+                                                    {% endif %}
+                                                    
+                                                    {% if assignment.status == 'Demo Scheduled' %}
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li>
+                                                        <form action="{{ url_for('mark_demo_completed', demo_id=assignment.demos[0].id) }}" method="POST" onsubmit="return confirm('Mark this demo as completed?');">
+                                                            <button type="submit" class="dropdown-item text-success">
+                                                                <i data-feather="check-circle" class="feather-sm me-1"></i> Mark Demo Completed
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                    <li>
+                                                        <form action="{{ url_for('mark_demo_cancelled', demo_id=assignment.demos[0].id) }}" method="POST" onsubmit="return confirm('Mark this demo as cancelled?');">
+                                                            <button type="submit" class="dropdown-item text-danger">
+                                                                <i data-feather="x-circle" class="feather-sm me-1"></i> Mark Demo Cancelled
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                    {% endif %}
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="8" class="text-center">No assignments found</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize feather icons for dropdown menu items
+        const dropdownFeathers = document.querySelectorAll('.dropdown-item .feather-sm');
+        if (dropdownFeathers) {
+            dropdownFeathers.forEach(icon => {
+                // Set small size for dropdown icons
+                icon.setAttribute('width', '16');
+                icon.setAttribute('height', '16');
+            });
+        }
+        
+        // Re-initialize feather icons
+        feather.replace();
+    });
+</script>
+{% endblock %}

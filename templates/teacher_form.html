@@ -1,0 +1,253 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 page-header">
+        <h1 class="h2">{{ 'Edit Teacher' if request.endpoint == 'edit_teacher' else 'Add New Teacher' }}</h1>
+        <a href="{{ url_for('teachers') }}" class="btn btn-outline-secondary">
+            <i data-feather="arrow-left"></i> Back to Teachers
+        </a>
+    </div>
+    
+    <div class="row">
+        <div class="col-12 col-lg-10 mx-auto">
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" action="" class="needs-validation" novalidate>
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row g-3">
+                            <!-- Basic Information -->
+                            <div class="col-12 mb-2">
+                                <h5 class="text-primary">Basic Information</h5>
+                            </div>
+                            
+                            <!-- Name -->
+                            <div class="col-md-6">
+                                <label for="{{ form.name.id }}" class="form-label">Full Name <span class="text-danger">*</span></label>
+                                {{ form.name(class="form-control", placeholder="Enter teacher's full name", required=true, onkeyup="updateIdPreview(this, 'teacherIdPreview', 'TCH')") }}
+                                {% if form.name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Gender -->
+                            <div class="col-md-6">
+                                <label for="{{ form.gender.id }}" class="form-label">Gender <span class="text-danger">*</span></label>
+                                {{ form.gender(class="form-control", required=true) }}
+                                {% if form.gender.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.gender.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Phone Number -->
+                            <div class="col-md-6">
+                                <label for="{{ form.phone.id }}" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                                {{ form.phone(class="form-control", placeholder="Enter primary phone number", required=true) }}
+                                {% if form.phone.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.phone.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Alternate Phone -->
+                            <div class="col-md-6">
+                                <label for="{{ form.alternate_phone.id }}" class="form-label">Alternate Phone Number</label>
+                                {{ form.alternate_phone(class="form-control", placeholder="Enter alternate phone number (optional)") }}
+                                {% if form.alternate_phone.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.alternate_phone.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Preferred Areas -->
+                            <div class="col-12">
+                                <label for="{{ form.preferred_areas.id }}" class="form-label">Preferred Areas <span class="text-danger">*</span></label>
+                                {{ form.preferred_areas(class="form-control", rows=5, placeholder="Enter at least 5 preferred areas (one per line)", required=true, onchange="validatePreferredAreas(this)") }}
+                                {% if form.preferred_areas.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.preferred_areas.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Enter at least 5 areas or locations where the teacher can travel for tutoring (one per line)</div>
+                            </div>
+                            
+                            <!-- Location -->
+                            <div class="col-md-6">
+                                <label for="{{ form.pincode.id }}" class="form-label">Pincode <span class="text-danger">*</span></label>
+                                {{ form.pincode(class="form-control", placeholder="Enter pincode", required=true) }}
+                                {% if form.pincode.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.pincode.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Education Section -->
+                            <div class="col-12 mt-4 mb-2">
+                                <h5 class="text-primary">Education Information</h5>
+                            </div>
+                            
+                            <!-- Qualification -->
+                            <div class="col-md-6">
+                                <label for="{{ form.qualification.id }}" class="form-label">Last Qualification <span class="text-danger">*</span></label>
+                                {{ form.qualification(class="form-control", placeholder="Enter highest qualification", required=true) }}
+                                {% if form.qualification.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.qualification.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Stream -->
+                            <div class="col-md-6">
+                                <label for="{{ form.stream.id }}" class="form-label">Stream <span class="text-danger">*</span></label>
+                                {{ form.stream(class="form-control", required=true) }}
+                                {% if form.stream.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.stream.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Board -->
+                            <div class="col-md-6">
+                                <label for="{{ form.board.id }}" class="form-label">School Board <span class="text-danger">*</span></label>
+                                {{ form.board(class="form-control", required=true) }}
+                                {% if form.board.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.board.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Teaching Section -->
+                            <div class="col-12 mt-4 mb-2">
+                                <h5 class="text-primary">Teaching Preferences</h5>
+                            </div>
+                            
+                            <!-- Preferred Subjects -->
+                            <div class="col-12">
+                                <label for="{{ form.preferred_subjects.id }}" class="form-label">Preferred Subjects <span class="text-danger">*</span></label>
+                                {{ form.preferred_subjects(class="form-control", required=true) }}
+                                {% if form.preferred_subjects.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.preferred_subjects.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Hold Ctrl (Cmd on Mac) to select multiple subjects</div>
+                            </div>
+                            
+                            <!-- ID Preview (only for new teachers) -->
+                            {% if request.endpoint == 'new_teacher' %}
+                            <div class="col-12 d-none" id="idPreviewContainer">
+                                <div class="alert alert-info">
+                                    <div class="d-flex align-items-center">
+                                        <i data-feather="info" class="me-3"></i>
+                                        <div>
+                                            <p class="mb-0">This teacher will be assigned ID: <strong id="teacherIdPreview">TCH12345</strong></p>
+                                            <small class="text-muted">The ID will be automatically generated upon saving</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Submit Button -->
+                            <div class="col-12 mt-4">
+                                <hr>
+                                <div class="d-flex justify-content-between">
+                                    <a href="{{ url_for('teachers') }}" class="btn btn-outline-secondary">Cancel</a>
+                                    {{ form.submit(class="btn btn-primary") }}
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Show ID preview when name is entered (only for new teachers)
+        {% if request.endpoint == 'new_teacher' %}
+        const nameInput = document.getElementById('name');
+        if (nameInput) {
+            nameInput.addEventListener('input', function() {
+                updateIdPreview(this, 'teacherIdPreview', 'TCH');
+            });
+        }
+        {% endif %}
+        
+        // Setup validation for preferred areas
+        const areasTextarea = document.getElementById('preferred_areas');
+        if (areasTextarea) {
+            areasTextarea.addEventListener('change', function() {
+                validatePreferredAreas(this);
+            });
+            areasTextarea.addEventListener('blur', function() {
+                validatePreferredAreas(this);
+            });
+        }
+    });
+    
+    // Custom validation function for preferred areas
+    function validatePreferredAreas(textarea) {
+        const areas = textarea.value.split('\n').filter(area => area.trim() !== '');
+        const minAreas = 5;
+        
+        if (areas.length < minAreas) {
+            textarea.setCustomValidity(`Please enter at least ${minAreas} preferred areas (one per line)`);
+            
+            // Show validation message
+            if (textarea.nextElementSibling && textarea.nextElementSibling.classList.contains('invalid-feedback')) {
+                textarea.nextElementSibling.textContent = `Please enter at least ${minAreas} preferred areas (one per line)`;
+                textarea.nextElementSibling.style.display = 'block';
+            } else {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'invalid-feedback d-block';
+                errorDiv.textContent = `Please enter at least ${minAreas} preferred areas (one per line)`;
+                textarea.parentNode.insertBefore(errorDiv, textarea.nextElementSibling);
+            }
+        } else {
+            textarea.setCustomValidity('');
+            
+            // Remove validation message if it exists
+            if (textarea.nextElementSibling && textarea.nextElementSibling.classList.contains('invalid-feedback')) {
+                textarea.nextElementSibling.style.display = 'none';
+            }
+        }
+    }
+</script>
+{% endblock %}

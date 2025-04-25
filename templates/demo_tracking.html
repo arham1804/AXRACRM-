@@ -1,0 +1,189 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 page-header">
+        <h1 class="h2">Demo Session Tracking</h1>
+    </div>
+    
+    <!-- Status filter -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Filter by Status</h5>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{{ url_for('demo_tracking') }}" class="btn btn-sm {% if current_filter == '' %}btn-primary{% else %}btn-outline-primary{% endif %}">All</a>
+                        <a href="{{ url_for('demo_tracking', status='Scheduled') }}" class="btn btn-sm {% if current_filter == 'Scheduled' %}btn-primary{% else %}btn-outline-primary{% endif %}">Scheduled</a>
+                        <a href="{{ url_for('demo_tracking', status='Completed') }}" class="btn btn-sm {% if current_filter == 'Completed' %}btn-success{% else %}btn-outline-success{% endif %}">Completed</a>
+                        <a href="{{ url_for('demo_tracking', status='Cancelled') }}" class="btn btn-sm {% if current_filter == 'Cancelled' %}btn-danger{% else %}btn-outline-danger{% endif %}">Cancelled</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Demos table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Demo ID</th>
+                                    <th>Student</th>
+                                    <th>Teacher</th>
+                                    <th>Scheduled Date</th>
+                                    <th>Reminder</th>
+                                    <th>Status</th>
+                                    <th>Feedback</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if demos %}
+                                    {% for demo in demos %}
+                                    <tr>
+                                        <td>{{ demo.id }}</td>
+                                        <td>
+                                            <div>{{ demo.assignment.student.name }}</div>
+                                            <small class="text-muted">{{ demo.assignment.student.lead_id }}</small>
+                                        </td>
+                                        <td>
+                                            <div>{{ demo.assignment.teacher.name }}</div>
+                                            <small class="text-muted">{{ demo.assignment.teacher.teacher_id }}</small>
+                                        </td>
+                                        <td>
+                                            {{ demo.scheduled_date.strftime('%Y-%m-%d %H:%M') }}
+                                            {% if demo.scheduled_date > now and demo.status == 'Scheduled' %}
+                                                <div>
+                                                    <small class="text-muted">
+                                                        (in {{ (demo.scheduled_date - now).days }} days)
+                                                    </small>
+                                                </div>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if demo.reminder_sent %}
+                                                <span class="badge bg-success">Sent</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Not Sent</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge status-{{ demo.status|lower }}">{{ demo.status }}</span>
+                                        </td>
+                                        <td>
+                                            {% if demo.feedback %}
+                                                <span class="badge bg-info">Received</span>
+                                                <div>
+                                                    <small>
+                                                        Rating: 
+                                                        {% for i in range(1, 6) %}
+                                                            {% if i <= demo.feedback.rating %}
+                                                                <i data-feather="star" class="text-warning feather-sm"></i>
+                                                            {% else %}
+                                                                <i data-feather="star" class="text-muted feather-sm"></i>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </small>
+                                                </div>
+                                            {% else %}
+                                                {% if demo.status == 'Completed' %}
+                                                    <span class="badge bg-warning">Pending</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">N/A</span>
+                                                {% endif %}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton{{ demo.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    Actions
+                                                </button>
+                                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ demo.id }}">
+                                                    {% if demo.status == 'Scheduled' %}
+                                                        {% if not demo.reminder_sent %}
+                                                        <li>
+                                                            <form action="{{ url_for('send_reminder', demo_id=demo.id) }}" method="POST">
+                                                                <button type="submit" class="dropdown-item">
+                                                                    <i data-feather="message-square" class="feather-sm me-1"></i> Send WhatsApp Reminder
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                        {% endif %}
+                                                        
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        
+                                                        <li>
+                                                            <form action="{{ url_for('mark_demo_completed', demo_id=demo.id) }}" method="POST">
+                                                                <button type="submit" class="dropdown-item text-success">
+                                                                    <i data-feather="check-circle" class="feather-sm me-1"></i> Mark Completed
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                        <li>
+                                                            <form action="{{ url_for('mark_demo_cancelled', demo_id=demo.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this demo?');">
+                                                                <button type="submit" class="dropdown-item text-danger">
+                                                                    <i data-feather="x-circle" class="feather-sm me-1"></i> Mark Cancelled
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                    {% elif demo.status == 'Completed' and not demo.feedback %}
+                                                        <li>
+                                                            <a class="dropdown-item" href="{{ url_for('provide_feedback', demo_id=demo.id) }}">
+                                                                <i data-feather="file-text" class="feather-sm me-1"></i> Provide Feedback
+                                                            </a>
+                                                        </li>
+                                                    {% endif %}
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="8" class="text-center">No demo sessions found</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize star icons
+        const stars = document.querySelectorAll('.feather-sm');
+        if (stars) {
+            stars.forEach(icon => {
+                // Set small size for stars
+                icon.setAttribute('width', '12');
+                icon.setAttribute('height', '12');
+            });
+        }
+        
+        // Initialize feather icons for dropdown menu items
+        const dropdownFeathers = document.querySelectorAll('.dropdown-item .feather-sm');
+        if (dropdownFeathers) {
+            dropdownFeathers.forEach(icon => {
+                // Set small size for dropdown icons
+                icon.setAttribute('width', '16');
+                icon.setAttribute('height', '16');
+            });
+        }
+        
+        // Re-initialize feather icons
+        feather.replace();
+    });
+</script>
+{% endblock %}

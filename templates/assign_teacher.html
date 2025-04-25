@@ -1,0 +1,274 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 page-header">
+        <h1 class="h2">Assign Teacher to Student</h1>
+        <a href="{{ url_for('student_leads') }}" class="btn btn-outline-secondary">
+            <i data-feather="arrow-left"></i> Back to Student Leads
+        </a>
+    </div>
+    
+    <div class="row mb-4">
+        <!-- Student information card -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Student Information</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">{{ student.lead_id }}</h6>
+                    <h5 class="card-title">{{ student.name }}</h5>
+                    
+                    <dl class="row mt-3 mb-0">
+                        <dt class="col-sm-4">Phone:</dt>
+                        <dd class="col-sm-8">{{ student.phone }}</dd>
+                        
+                        <dt class="col-sm-4">Class:</dt>
+                        <dd class="col-sm-8">{{ student.class_level }}</dd>
+                        
+                        <dt class="col-sm-4">Area:</dt>
+                        <dd class="col-sm-8">{{ student.area }}</dd>
+                        
+                        <dt class="col-sm-4">Gender Pref:</dt>
+                        <dd class="col-sm-8">{{ student.gender_preference }}</dd>
+                        
+                        <dt class="col-sm-4">Fee:</dt>
+                        <dd class="col-sm-8">₹{{ student.fee }}</dd>
+                        
+                        <dt class="col-sm-4">Subjects:</dt>
+                        <dd class="col-sm-8">
+                            {% for subject in student.get_subjects_list() %}
+                                <span class="badge bg-secondary me-1 mb-1">{{ subject }}</span>
+                            {% endfor %}
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Teacher selection form -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Select Teacher</h5>
+                </div>
+                <div class="card-body">
+                    {% if suitable_teachers %}
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <i data-feather="info" class="me-2"></i>
+                                    We found {{ suitable_teachers|length }} suitable teachers for this student.
+                                    Teachers are sorted by match score (highest first).
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <form method="POST" action="">
+                            {{ form.hidden_tag() }}
+                            
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="form-group mb-3">
+                                        <label for="{{ form.teacher_id.id }}" class="form-label">Choose Teacher:</label>
+                                        {{ form.teacher_id(class="form-control", onchange="updateTeacherSelection(this)") }}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="form-label">Match Score:</label>
+                                        <div class="d-flex align-items-center">
+                                            <span id="selectedMatchScore" class="badge bg-success me-2">
+                                                {{ suitable_teachers[0].match_score }}
+                                            </span>
+                                            <div class="progress flex-grow-1">
+                                                <div id="selectedMatchBar" class="progress-bar bg-success" role="progressbar" 
+                                                     style="width: {{ suitable_teachers[0].match_score }}%;"
+                                                     aria-valuenow="{{ suitable_teachers[0].match_score }}" 
+                                                     aria-valuemin="0" aria-valuemax="100">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Teacher details cards -->
+                            {% for item in suitable_teachers %}
+                                <div class="card mt-3 teacher-detail-card{% if loop.index > 1 %} d-none{% endif %}" 
+                                     data-teacher-id="{{ item.teacher.id }}">
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <h5 class="card-title">{{ item.teacher.name }} 
+                                                    <span class="text-muted">({{ item.teacher.teacher_id }})</span>
+                                                </h5>
+                                                <p class="card-text">
+                                                    <small class="d-block">
+                                                        <strong>Phone:</strong> {{ item.teacher.phone }}
+                                                    </small>
+                                                    <small class="d-block">
+                                                        <strong>Gender:</strong> {{ item.teacher.gender }}
+                                                    </small>
+                                                    <small class="d-block">
+                                                        <strong>Qualification:</strong> {{ item.teacher.qualification }} ({{ item.teacher.stream }})
+                                                    </small>
+                                                    <small class="d-block">
+                                                        <strong>Board:</strong> {{ item.teacher.board }}
+                                                    </small>
+                                                </p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h6>Match Analysis</h6>
+                                                
+                                                <div class="d-flex justify-content-between mb-1">
+                                                    <span>Area Match:</span>
+                                                    <span id="matchedAreas" class="text-end">
+                                                        {% set areas = item.teacher.get_preferred_areas_list() %}
+                                                        {% set matched = false %}
+                                                        {% for area in areas %}
+                                                            {% if student.area.lower() in area.lower() or area.lower() in student.area.lower() %}
+                                                                <span class="badge bg-success">{{ area }}</span>
+                                                                {% set matched = true %}
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                        {% if not matched %}
+                                                            <span class="badge bg-danger">No match</span>
+                                                        {% endif %}
+                                                    </span>
+                                                </div>
+                                                
+                                                <div class="d-flex justify-content-between mb-1">
+                                                    <span>Subject Match:</span>
+                                                    <span id="matchedSubjects" class="text-end">
+                                                        {% set student_subjects = student.get_subjects_list() %}
+                                                        {% set teacher_subjects = item.teacher.get_preferred_subjects_list() %}
+                                                        {% set matched_subjects = [] %}
+                                                        {% for subject in student_subjects %}
+                                                            {% if subject in teacher_subjects %}
+                                                                {% do matched_subjects.append(subject) %}
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                        
+                                                        {% if matched_subjects %}
+                                                            {% for subject in matched_subjects %}
+                                                                <span class="badge bg-success me-1">{{ subject }}</span>
+                                                            {% endfor %}
+                                                            <small class="d-block mt-1">{{ (matched_subjects|length / student_subjects|length * 100)|round }}% match</small>
+                                                        {% else %}
+                                                            <span class="badge bg-danger">No match</span>
+                                                        {% endif %}
+                                                    </span>
+                                                </div>
+                                                
+                                                <div class="d-flex justify-content-between mb-1">
+                                                    <span>Gender Match:</span>
+                                                    <span>
+                                                        {% if student.gender_preference == 'ANY' or student.gender_preference == item.teacher.gender %}
+                                                            <span class="badge bg-success">Yes</span>
+                                                        {% else %}
+                                                            <span class="badge bg-danger">No</span>
+                                                        {% endif %}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                            
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                                <a href="{{ url_for('student_leads') }}" class="btn btn-outline-secondary">Cancel</a>
+                                {{ form.submit(class="btn btn-primary") }}
+                            </div>
+                        </form>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <i data-feather="alert-triangle" class="me-2"></i>
+                            No suitable teachers found for this student. Try modifying the student's requirements or add more teachers.
+                        </div>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{{ url_for('student_leads') }}" class="btn btn-outline-secondary">Back to Student Leads</a>
+                            <a href="{{ url_for('new_teacher') }}" class="btn btn-primary">Add New Teacher</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/assignmentMatch.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize feather icons in alert
+        feather.replace();
+        
+        // Update teacher selection based on initial value
+        const teacherSelect = document.getElementById('teacher_id');
+        if (teacherSelect) {
+            updateTeacherSelection(teacherSelect);
+        }
+    });
+    
+    function updateTeacherSelection(select) {
+        if (!select) return;
+        
+        const selectedOption = select.options[select.selectedIndex];
+        const teacherId = select.value;
+        
+        // Extract match score from the option text
+        const matchRegex = /Match: (\d+)%/;
+        const matchTextMatch = selectedOption.text.match(matchRegex);
+        const matchScore = matchTextMatch ? matchTextMatch[1] : "0";
+        
+        // Update badge
+        const matchScoreElement = document.getElementById('selectedMatchScore');
+        if (matchScoreElement) {
+            matchScoreElement.textContent = matchScore;
+            
+            // Update color based on score
+            matchScoreElement.className = 'badge me-2';
+            
+            if (parseInt(matchScore) >= 80) {
+                matchScoreElement.classList.add('bg-success');
+            } else if (parseInt(matchScore) >= 50) {
+                matchScoreElement.classList.add('bg-warning');
+            } else {
+                matchScoreElement.classList.add('bg-danger');
+            }
+        }
+        
+        // Update progress bar
+        const matchBarElement = document.getElementById('selectedMatchBar');
+        if (matchBarElement) {
+            matchBarElement.style.width = matchScore + '%';
+            matchBarElement.setAttribute('aria-valuenow', matchScore);
+            
+            // Update color based on score
+            matchBarElement.className = 'progress-bar';
+            
+            if (parseInt(matchScore) >= 80) {
+                matchBarElement.classList.add('bg-success');
+            } else if (parseInt(matchScore) >= 50) {
+                matchBarElement.classList.add('bg-warning');
+            } else {
+                matchBarElement.classList.add('bg-danger');
+            }
+        }
+        
+        // Show appropriate teacher card
+        document.querySelectorAll('.teacher-detail-card').forEach(card => {
+            if (card.dataset.teacherId === teacherId) {
+                card.classList.remove('d-none');
+            } else {
+                card.classList.add('d-none');
+            }
+        });
+    }
+</script>
+{% endblock %}

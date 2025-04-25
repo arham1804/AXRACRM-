@@ -1,0 +1,298 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 page-header">
+        <h1 class="h2">Dashboard</h1>
+        <button id="refreshDashboard" class="btn btn-sm btn-outline-primary">
+            <i data-feather="refresh-cw"></i> Refresh
+            <span id="loadingIndicator" class="spinner-border spinner-border-sm d-none" role="status"></span>
+        </button>
+    </div>
+    
+    <!-- Stats cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="card dashboard-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">Total Leads</h6>
+                            <h2 class="card-title mb-0" id="totalLeads">{{ stats.total_leads }}</h2>
+                        </div>
+                        <div class="p-2 bg-primary-subtle rounded">
+                            <i data-feather="users" class="text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="card dashboard-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">Total Teachers</h6>
+                            <h2 class="card-title mb-0" id="totalTeachers">{{ stats.total_teachers }}</h2>
+                        </div>
+                        <div class="p-2 bg-success-subtle rounded">
+                            <i data-feather="user-check" class="text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="card dashboard-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">Assignments</h6>
+                            <h2 class="card-title mb-0" id="totalAssignments">{{ stats.total_assignments }}</h2>
+                        </div>
+                        <div class="p-2 bg-warning-subtle rounded">
+                            <i data-feather="clipboard" class="text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="card dashboard-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">Demo Sessions</h6>
+                            <h2 class="card-title mb-0" id="totalDemos">{{ stats.total_demos }}</h2>
+                        </div>
+                        <div class="p-2 bg-info-subtle rounded">
+                            <i data-feather="calendar" class="text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Conversion rates cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card dashboard-card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Lead to Demo Conversion</h5>
+                    <div class="d-flex align-items-center">
+                        <h1 class="display-4 mb-0 me-2" id="leadConversionRate">{{ stats.lead_to_demo_rate }}</h1>
+                        <span>%</span>
+                    </div>
+                    <p class="card-text text-muted">Percentage of leads that result in a demo session</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card dashboard-card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Demo to Tuition Conversion</h5>
+                    <div class="d-flex align-items-center">
+                        <h1 class="display-4 mb-0 me-2" id="demoConversionRate">{{ stats.demo_to_conversion_rate }}</h1>
+                        <span>%</span>
+                    </div>
+                    <p class="card-text text-muted">Percentage of demos that convert to tuition assignments</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Charts -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card dashboard-card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Lead Status</h5>
+                    <div class="chart-container">
+                        <canvas id="leadStatusChart" data-stats="{{ stats.lead_status|tojson }}"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card dashboard-card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Assignment Status</h5>
+                    <div class="chart-container">
+                        <canvas id="assignmentStatusChart" data-stats="{{ stats.assignment_status|tojson }}"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card dashboard-card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Demo Status</h5>
+                    <div class="chart-container">
+                        <canvas id="demoStatusChart" data-stats="{{ stats.demo_status|tojson }}"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Monthly trends chart -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card dashboard-card">
+                <div class="card-body">
+                    <h5 class="card-title">Monthly Trends</h5>
+                    <div class="chart-container">
+                        <canvas id="monthlyTrendsChart" 
+                                data-months="{{ stats.trend_months|tojson }}"
+                                data-leads="{{ stats.trend_leads|tojson }}"
+                                data-conversions="{{ stats.trend_conversions|tojson }}"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tables -->
+    <div class="row g-4">
+        <!-- Recent leads -->
+        <div class="col-md-6">
+            <div class="card dashboard-card h-100">
+                <div class="card-header bg-transparent">
+                    <h5 class="card-title mb-0">Recent Leads</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm mb-0" id="recentLeadsTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Area</th>
+                                    <th>Class</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if stats.recent_leads %}
+                                    {% for lead in stats.recent_leads %}
+                                    <tr>
+                                        <td>{{ lead.name }}</td>
+                                        <td>{{ lead.area }}</td>
+                                        <td>{{ lead.class_level }}</td>
+                                        <td>{{ lead.created_at }}</td>
+                                        <td><span class="badge status-{{ lead.status|lower }}">{{ lead.status }}</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center">No recent leads found</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a href="{{ url_for('student_leads') }}" class="btn btn-sm btn-outline-primary">View All Leads</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent demos -->
+        <div class="col-md-6">
+            <div class="card dashboard-card h-100">
+                <div class="card-header bg-transparent">
+                    <h5 class="card-title mb-0">Recent Demos</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm mb-0" id="recentDemosTable">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Teacher</th>
+                                    <th>Date & Time</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if stats.recent_demos %}
+                                    {% for demo in stats.recent_demos %}
+                                    <tr>
+                                        <td>{{ demo.student_name }}</td>
+                                        <td>{{ demo.teacher_name }}</td>
+                                        <td>{{ demo.scheduled_date }}</td>
+                                        <td><span class="badge status-{{ demo.status|lower }}">{{ demo.status }}</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center">No recent demos found</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a href="{{ url_for('demo_tracking') }}" class="btn btn-sm btn-outline-primary">View All Demos</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Top teachers -->
+        <div class="col-12">
+            <div class="card dashboard-card">
+                <div class="card-header bg-transparent">
+                    <h5 class="card-title mb-0">Top Performing Teachers</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm mb-0" id="topTeachersTable">
+                            <thead>
+                                <tr>
+                                    <th>Teacher Name</th>
+                                    <th>Total Assignments</th>
+                                    <th>Conversions</th>
+                                    <th>Conversion Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if stats.top_teachers %}
+                                    {% for teacher in stats.top_teachers %}
+                                    <tr>
+                                        <td>{{ teacher.name }}</td>
+                                        <td>{{ teacher.total_assignments }}</td>
+                                        <td>{{ teacher.conversions }}</td>
+                                        <td>{{ teacher.conversion_rate }}%</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center">No teacher data found</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a href="{{ url_for('teachers') }}" class="btn btn-sm btn-outline-primary">View All Teachers</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

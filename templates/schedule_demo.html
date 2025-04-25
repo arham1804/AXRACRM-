@@ -1,0 +1,165 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 page-header">
+        <h1 class="h2">Schedule Demo Session</h1>
+        <a href="{{ url_for('assignments') }}" class="btn btn-outline-secondary">
+            <i data-feather="arrow-left"></i> Back to Assignments
+        </a>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-5 mb-4">
+            <!-- Assignment details card -->
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Assignment Details</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-muted mb-2">Tuition ID: {{ assignment.tuition_id }}</h6>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h6 class="border-bottom pb-2">Student Information</h6>
+                            <dl class="row mb-0">
+                                <dt class="col-sm-4">Name:</dt>
+                                <dd class="col-sm-8">{{ assignment.student.name }}</dd>
+                                
+                                <dt class="col-sm-4">Lead ID:</dt>
+                                <dd class="col-sm-8">{{ assignment.student.lead_id }}</dd>
+                                
+                                <dt class="col-sm-4">Phone:</dt>
+                                <dd class="col-sm-8">{{ assignment.student.phone }}</dd>
+                                
+                                <dt class="col-sm-4">Class:</dt>
+                                <dd class="col-sm-8">{{ assignment.student.class_level }}</dd>
+                                
+                                <dt class="col-sm-4">Area:</dt>
+                                <dd class="col-sm-8">{{ assignment.student.area }}</dd>
+                                
+                                <dt class="col-sm-4">Fee:</dt>
+                                <dd class="col-sm-8">₹{{ assignment.student.fee }}</dd>
+                            </dl>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="border-bottom pb-2">Teacher Information</h6>
+                            <dl class="row mb-0">
+                                <dt class="col-sm-5">Name:</dt>
+                                <dd class="col-sm-7">{{ assignment.teacher.name }}</dd>
+                                
+                                <dt class="col-sm-5">Teacher ID:</dt>
+                                <dd class="col-sm-7">{{ assignment.teacher.teacher_id }}</dd>
+                                
+                                <dt class="col-sm-5">Phone:</dt>
+                                <dd class="col-sm-7">{{ assignment.teacher.phone }}</dd>
+                                
+                                <dt class="col-sm-5">Qualification:</dt>
+                                <dd class="col-sm-7">{{ assignment.teacher.qualification }}</dd>
+                                
+                                <dt class="col-sm-5">Gender:</dt>
+                                <dd class="col-sm-7">{{ assignment.teacher.gender }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h6 class="border-bottom pb-2">Subjects</h6>
+                            <div>
+                                {% for subject in assignment.student.get_subjects_list() %}
+                                    <span class="badge bg-secondary me-1 mb-1">{{ subject }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-7">
+            <!-- Schedule form card -->
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Schedule Demo</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="" class="needs-validation" novalidate>
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row g-3">
+                            <!-- Datetime Picker -->
+                            <div class="col-12">
+                                <label for="{{ form.scheduled_date.id }}" class="form-label">Demo Date and Time <span class="text-danger">*</span></label>
+                                {{ form.scheduled_date(class="form-control", type="datetime-local", required=true) }}
+                                {% if form.scheduled_date.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.scheduled_date.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Select a date and time for the demo session</div>
+                            </div>
+                            
+                            <!-- Schedule Demo Information -->
+                            <div class="col-12 mt-3">
+                                <div class="alert alert-info">
+                                    <div class="d-flex">
+                                        <i data-feather="info" class="me-3 flex-shrink-0"></i>
+                                        <div>
+                                            <h6 class="alert-heading">Demo Session Guidelines</h6>
+                                            <p class="mb-0">
+                                                Once scheduled, the demo status will be updated to "Scheduled".
+                                                You can send WhatsApp reminders to both student and teacher before the demo.
+                                                After the demo, make sure to collect feedback from the teacher about the session.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Submit Button -->
+                            <div class="col-12 mt-2">
+                                <hr>
+                                <div class="d-flex justify-content-between">
+                                    <a href="{{ url_for('assignments') }}" class="btn btn-outline-secondary">Cancel</a>
+                                    {{ form.submit(class="btn btn-primary") }}
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Tips card -->
+            <div class="card mt-4">
+                <div class="card-header bg-secondary">
+                    <h5 class="card-title mb-0">Tips for Successful Demos</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li>Schedule demos at times convenient for both student and teacher</li>
+                        <li>Send reminders at least 24 hours before the demo</li>
+                        <li>Ensure the teacher has all subject materials prepared</li>
+                        <li>Follow up with both parties after the demo session</li>
+                        <li>Collect feedback promptly to improve conversion rates</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/formValidation.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize feather icons
+        feather.replace();
+    });
+</script>
+{% endblock %}
