@@ -1,0 +1,151 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0">Reassign Teacher</h1>
+        <a href="{{ url_for('demo_tracking') }}" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to Demo Tracking
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold">Demo and Feedback Details</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Student Details</h5>
+                            <table class="table table-sm">
+                                <tr>
+                                    <th style="width: 150px;">Name:</th>
+                                    <td>{{ demo.assignment.student.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Class:</th>
+                                    <td>{{ demo.assignment.student.class_level }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Area:</th>
+                                    <td>{{ demo.assignment.student.area }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Subjects:</th>
+                                    <td>{{ ', '.join(demo.assignment.student.get_subjects_list()) }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Current Teacher</h5>
+                            <table class="table table-sm">
+                                <tr>
+                                    <th style="width: 150px;">Name:</th>
+                                    <td>{{ demo.assignment.teacher.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Teacher ID:</th>
+                                    <td>{{ demo.assignment.teacher.teacher_id }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Qualification:</th>
+                                    <td>{{ demo.assignment.teacher.qualification }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Experience:</th>
+                                    <td>{{ demo.assignment.teacher.teaching_experience }} years</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <h5>Demo and Feedback</h5>
+                            <div class="card border-left-danger">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <strong>Demo Date:</strong> {{ demo.scheduled_date.strftime('%Y-%m-%d %H:%M') }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <strong>Rating:</strong> 
+                                            <span class="text-danger">
+                                                {{ demo.feedback.rating }}/5
+                                                {% if demo.feedback.rating == 1 %}
+                                                    (Poor)
+                                                {% elif demo.feedback.rating == 2 %}
+                                                    (Below Average)
+                                                {% elif demo.feedback.rating == 3 %}
+                                                    (Average)
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <strong>Student Interest:</strong> {{ demo.feedback.student_interest }}
+                                        </div>
+                                    </div>
+                                    {% if demo.feedback.comments %}
+                                    <div class="row mt-2">
+                                        <div class="col-md-12">
+                                            <strong>Comments:</strong>
+                                            <p class="text-muted">{{ demo.feedback.comments }}</p>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold">Assign New Teacher</h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="">
+                        {{ form.hidden_tag() }}
+                        <div class="form-group">
+                            {{ form.teacher_id.label(class="form-control-label") }}
+                            {% if form.teacher_id.errors %}
+                                {{ form.teacher_id(class="form-control is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.teacher_id.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.teacher_id(class="form-control") }}
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            {{ form.reason.label(class="form-control-label") }}
+                            {% if form.reason.errors %}
+                                {{ form.reason(class="form-control is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.reason.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.reason(class="form-control", rows=4, placeholder="Please explain why the teacher is being reassigned") }}
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            {{ form.submit(class="btn btn-primary") }}
+                            <a href="{{ url_for('demo_tracking') }}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -77,6 +77,15 @@ def new_student_lead():
         )
         db.session.add(student)
         db.session.commit()
+        
+        # Create notification for new lead
+        Notification.create_notification(
+            title="New Student Lead Added",
+            message=f"New student lead '{student.name}' has been added. Please assign a teacher soon.",
+            notification_type="new_lead",
+            related_id=student.id
+        )
+        
         flash('Student lead added successfully!', 'success')
         return redirect(url_for('student_leads'))
     
@@ -285,6 +294,15 @@ def assign_teacher(lead_id):
         student.status = 'Assigned'
         
         db.session.commit()
+        
+        # Create notification for teacher assignment
+        Notification.create_notification(
+            title=f"Teacher Assigned to {student.name}",
+            message=f"Teacher {teacher.name} has been assigned to student {student.name}. Please schedule a demo soon.",
+            notification_type="assignment",
+            related_id=assignment.id
+        )
+        
         flash('Teacher assigned successfully!', 'success')
         return redirect(url_for('assignments'))
     
@@ -309,6 +327,19 @@ def schedule_demo(assignment_id):
         assignment.status = 'Demo Scheduled'
         
         db.session.commit()
+        
+        # Create notification for demo scheduling
+        student_name = assignment.student.name
+        teacher_name = assignment.teacher.name
+        scheduled_time = form.scheduled_date.data.strftime("%Y-%m-%d %H:%M")
+        
+        Notification.create_notification(
+            title=f"Demo Scheduled: {student_name} with {teacher_name}",
+            message=f"A demo has been scheduled for student {student_name} with teacher {teacher_name} on {scheduled_time}.",
+            notification_type="demo_scheduled",
+            related_id=demo.id
+        )
+        
         flash('Demo scheduled successfully!', 'success')
         return redirect(url_for('demo_tracking'))
     
@@ -364,6 +395,19 @@ def send_reminder(demo_id):
 def mark_demo_completed(demo_id):
     demo = Demo.query.get_or_404(demo_id)
     demo.status = 'Completed'
+    
+    # Get student and teacher info for notification
+    student_name = demo.assignment.student.name
+    teacher_name = demo.assignment.teacher.name
+    
+    # Create notification
+    Notification.create_notification(
+        title=f"Demo Completed: {student_name}",
+        message=f"The demo for {student_name} with {teacher_name} has been marked as completed. Please provide feedback.",
+        notification_type="demo_completed",
+        related_id=demo.id
+    )
+    
     db.session.commit()
     flash('Demo marked as completed!', 'success')
     return redirect(url_for('demo_tracking'))
@@ -377,6 +421,19 @@ def mark_demo_cancelled(demo_id):
     # Update assignment status
     assignment = demo.assignment
     assignment.status = 'Cancelled'
+    
+    # Get student and teacher info for notification
+    student_name = demo.assignment.student.name
+    teacher_name = demo.assignment.teacher.name
+    
+    # Create notification with urgent flag
+    Notification.create_notification(
+        title=f"Demo Cancelled: {student_name}",
+        message=f"The demo for {student_name} with {teacher_name} has been cancelled. Please check the details and consider reassigning.",
+        notification_type="demo_cancelled",
+        related_id=demo.id,
+        is_urgent=True
+    )
     
     db.session.commit()
     flash('Demo marked as cancelled!', 'success')
@@ -414,11 +471,159 @@ def provide_feedback(demo_id):
             assignment.status = 'Cancelled'
             assignment.student.status = 'Lost'
         
+        # Create notification for feedback, make it urgent if feedback is negative
+        student_name = demo.assignment.student.name
+        teacher_name = demo.assignment.teacher.name
+        is_negative = form.rating.data < 3
+        
+        notification_title = f"Demo Feedback: {student_name} - {'Poor' if is_negative else 'Good'}"
+        notification_message = (
+            f"Feedback has been provided for the demo of {student_name} with {teacher_name}. "
+            f"Rating: {form.rating.data}/5, Interest: {form.student_interest.data}"
+        )
+        
+        if form.comments.data:
+            notification_message += f"\nComments: {form.comments.data}"
+        
+        Notification.create_notification(
+            title=notification_title,
+            message=notification_message,
+            notification_type="demo_feedback",
+            related_id=demo.id,
+            is_urgent=is_negative
+        )
+        
+        # If feedback is negative (rating < 3), suggest reassignment
+        if is_negative and form.student_interest.data != 'Not Interested':
+            Notification.create_notification(
+                title=f"Reassignment Suggested: {student_name}",
+                message=f"The feedback for {student_name}'s demo with {teacher_name} was poor (Rating: {form.rating.data}/5). Consider reassigning to another teacher.",
+                notification_type="reassignment_suggested",
+                related_id=demo.id,
+                is_urgent=True
+            )
+        
         db.session.commit()
         flash('Feedback submitted successfully!', 'success')
         return redirect(url_for('demo_tracking'))
     
     return render_template('feedback_form.html', title='Provide Feedback', form=form, demo=demo)
+
+# Notification routes
+@app.route('/notifications')
+@login_required
+def notifications():
+    all_notifications = Notification.query.order_by(Notification.created_at.desc()).all()
+    return render_template('notifications.html', title='Notifications', notifications=all_notifications)
+
+@app.route('/notifications/mark-read/<int:notification_id>', methods=['POST'])
+@login_required
+def mark_notification_read(notification_id):
+    result = Notification.mark_as_read(notification_id)
+    if result:
+        return jsonify({'success': True})
+    return jsonify({'success': False, 'error': 'Notification not found'}), 404
+
+@app.route('/notifications/delete/<int:notification_id>', methods=['POST'])
+@login_required
+def delete_notification(notification_id):
+    result = Notification.delete_notification(notification_id)
+    if result:
+        return jsonify({'success': True})
+    return jsonify({'success': False, 'error': 'Notification not found'}), 404
+
+@app.route('/api/notifications/unread')
+@login_required
+def api_unread_notifications():
+    # Run background checks for new notifications
+    Notification.check_unassigned_leads()
+    Notification.check_upcoming_demos()
+    
+    unread = Notification.get_unread_notifications()
+    notifications_data = [{
+        'id': n.id,
+        'title': n.title,
+        'message': n.message,
+        'type': n.notification_type,
+        'is_urgent': n.is_urgent,
+        'created_at': n.created_at.strftime('%Y-%m-%d %H:%M')
+    } for n in unread]
+    
+    return jsonify({
+        'count': len(notifications_data),
+        'notifications': notifications_data
+    })
+
+# Demo reassignment route for failed demos
+@app.route('/demo/<int:demo_id>/reassign', methods=['GET', 'POST'])
+@login_required
+def reassign_teacher_for_demo(demo_id):
+    demo = Demo.query.get_or_404(demo_id)
+    
+    # Only allow reassignment for completed demos with poor feedback
+    if demo.status != 'Completed' or not demo.feedback:
+        flash('This demo is not eligible for teacher reassignment.', 'warning')
+        return redirect(url_for('demo_tracking'))
+    
+    # If feedback is good (4-5), don't allow reassignment
+    if demo.feedback.rating >= 4:
+        flash('This demo has positive feedback and does not need reassignment.', 'info')
+        return redirect(url_for('demo_tracking'))
+    
+    student = demo.assignment.student
+    form = ReassignTeacherForm()
+    
+    # Get suitable teachers based on matching criteria
+    suitable_teachers = []
+    all_teachers = Teacher.query.filter_by(status='Active').all()
+    
+    # Filter out the current teacher
+    all_teachers = [t for t in all_teachers if t.id != demo.assignment.teacher_id]
+    
+    for teacher in all_teachers:
+        match_score = calculate_match_score(student, teacher)
+        if match_score > 0:
+            suitable_teachers.append({
+                'teacher': teacher,
+                'match_score': match_score
+            })
+    
+    # Sort by match score (highest first)
+    suitable_teachers.sort(key=lambda x: x['match_score'], reverse=True)
+    
+    # Update form choices
+    form.teacher_id.choices = [(t['teacher'].id, f"{t['teacher'].name} - {t['teacher'].teacher_id} (Match: {t['match_score']}%)") 
+                              for t in suitable_teachers]
+    
+    if form.validate_on_submit():
+        new_teacher = Teacher.query.get(form.teacher_id.data)
+        
+        # Create new assignment
+        new_assignment = TuitionAssignment(
+            student_id=student.id,
+            teacher_id=new_teacher.id,
+            status='Pending'
+        )
+        db.session.add(new_assignment)
+        
+        # Update old assignment status
+        old_assignment = demo.assignment
+        old_assignment.status = 'Cancelled'
+        
+        # Create notification for both new teacher and old teacher
+        Notification.create_notification(
+            title=f"Teacher Reassigned: {student.name}",
+            message=f"Student {student.name} has been reassigned from {old_assignment.teacher.name} to {new_teacher.name}. Reason: {form.reason.data}",
+            notification_type='teacher_reassigned',
+            related_id=new_assignment.id,
+            is_urgent=True
+        )
+        
+        db.session.commit()
+        flash('Teacher reassigned successfully!', 'success')
+        return redirect(url_for('assignments'))
+    
+    return render_template('reassign_teacher.html', title='Reassign Teacher', form=form, demo=demo)
 
 # API routes for dashboard data
 @app.route('/api/dashboard/stats')
