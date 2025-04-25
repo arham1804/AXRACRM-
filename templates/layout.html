@@ -127,39 +127,6 @@
                     <div class="container-fluid">
                         <span class="navbar-brand mb-0 h1">{{ title if title else 'Axra Tutor CRM' }}</span>
                         <div class="d-flex align-items-center">
-                            <!-- Theme Toggle -->
-                            <div class="me-3">
-                                <button id="themeToggle" class="btn btn-outline-light" title="Toggle Dark/Light Mode">
-                                    <i data-feather="moon"></i>
-                                </button>
-                            </div>
-                            
-                            <!-- Quick Actions Dropdown -->
-                            <div class="dropdown me-3">
-                                <a class="btn btn-outline-light position-relative" href="#" role="button" id="quickActionsDropdown" 
-                                   data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i data-feather="more-horizontal"></i>
-                                </a>
-                                <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="quickActionsDropdown">
-                                    <li>
-                                        <h6 class="dropdown-header">Quick Actions</h6>
-                                    </li>
-                                    <li><a class="dropdown-item" href="{{ url_for('student_form') }}">
-                                        <i data-feather="user-plus" class="feather-sm me-2 text-primary"></i> Add New Student
-                                    </a></li>
-                                    <li><a class="dropdown-item" href="{{ url_for('teacher_form') }}">
-                                        <i data-feather="user-check" class="feather-sm me-2 text-success"></i> Add New Teacher
-                                    </a></li>
-                                    <li><a class="dropdown-item" href="{{ url_for('demo_tracking') }}">
-                                        <i data-feather="calendar" class="feather-sm me-2 text-warning"></i> Schedule Demo
-                                    </a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="{{ url_for('quick_communication') }}">
-                                        <i data-feather="send" class="feather-sm me-2 text-info"></i> Quick Communication
-                                    </a></li>
-                                </ul>
-                            </div>
-                            
                             <!-- Notifications Dropdown -->
                             <div class="dropdown me-3">
                                 <a class="btn btn-outline-light position-relative" href="#" role="button" id="notificationDropdown" 
@@ -169,7 +136,7 @@
                                         0
                                     </span>
                                 </a>
-                                <ul class="dropdown-menu dropdown-menu-end notification-dropdown shadow-sm" aria-labelledby="notificationDropdown" 
+                                <ul class="dropdown-menu dropdown-menu-end notification-dropdown" aria-labelledby="notificationDropdown" 
                                     style="width: 350px; max-height: 400px; overflow-y: auto;">
                                     <li>
                                         <h6 class="dropdown-header d-flex justify-content-between align-items-center">
@@ -179,37 +146,13 @@
                                     </li>
                                     <div id="notification-items">
                                         <li class="text-center p-3">
-                                            <div class="spinner-border spinner-border-sm text-royal-purple" role="status">
+                                            <div class="spinner-border spinner-border-sm text-primary" role="status">
                                                 <span class="visually-hidden">Loading...</span>
                                             </div>
                                         </li>
                                     </div>
                                 </ul>
                             </div>
-                            
-                            <!-- Help Button -->
-                            <div class="dropdown me-3">
-                                <a class="btn btn-outline-light position-relative" href="#" role="button" id="helpDropdown"
-                                   data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i data-feather="help-circle"></i>
-                                </a>
-                                <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="helpDropdown">
-                                    <li>
-                                        <h6 class="dropdown-header">Need Help?</h6>
-                                    </li>
-                                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#keyboardShortcutsModal">
-                                        <i data-feather="command" class="feather-sm me-2"></i> Keyboard Shortcuts
-                                    </a></li>
-                                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#userGuideModal">
-                                        <i data-feather="book-open" class="feather-sm me-2"></i> User Guide
-                                    </a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#contactSupportModal">
-                                        <i data-feather="headphones" class="feather-sm me-2"></i> Contact Support
-                                    </a></li>
-                                </ul>
-                            </div>
-                            
                             <!-- User Info -->
                             <div class="dropdown">
                                 <a class="btn btn-outline-light dropdown-toggle" href="#" role="button" id="userDropdown" 
@@ -222,9 +165,6 @@
                                     </li>
                                     <li><a class="dropdown-item" href="{{ url_for('dashboard') }}">
                                         <i data-feather="home" class="feather-sm me-2"></i> Dashboard
-                                    </a></li>
-                                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#userProfileModal">
-                                        <i data-feather="settings" class="feather-sm me-2"></i> Settings
                                     </a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
@@ -268,305 +208,6 @@
     
     <!-- Toast container for notifications -->
     <div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
-    
-    <!-- Keyboard Shortcuts Modal -->
-    <div class="modal fade" id="keyboardShortcutsModal" tabindex="-1" aria-labelledby="keyboardShortcutsModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header gradient-purple text-white">
-                    <h5 class="modal-title" id="keyboardShortcutsModalLabel">Keyboard Shortcuts</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Action</th>
-                                <th>Shortcut</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Dashboard</td>
-                                <td><kbd>Alt</kbd> + <kbd>D</kbd></td>
-                            </tr>
-                            <tr>
-                                <td>Student Leads</td>
-                                <td><kbd>Alt</kbd> + <kbd>S</kbd></td>
-                            </tr>
-                            <tr>
-                                <td>Teachers</td>
-                                <td><kbd>Alt</kbd> + <kbd>T</kbd></td>
-                            </tr>
-                            <tr>
-                                <td>Assignments</td>
-                                <td><kbd>Alt</kbd> + <kbd>A</kbd></td>
-                            </tr>
-                            <tr>
-                                <td>Notifications</td>
-                                <td><kbd>Alt</kbd> + <kbd>N</kbd></td>
-                            </tr>
-                            <tr>
-                                <td>Search</td>
-                                <td><kbd>/</kbd></td>
-                            </tr>
-                            <tr>
-                                <td>Toggle Dark Mode</td>
-                                <td><kbd>Alt</kbd> + <kbd>M</kbd></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- User Guide Modal -->
-    <div class="modal fade" id="userGuideModal" tabindex="-1" aria-labelledby="userGuideModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-header gradient-purple text-white">
-                    <h5 class="modal-title" id="userGuideModalLabel">User Guide</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <ul class="nav nav-tabs" id="userGuideTab" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button">
-                                Overview
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="leads-tab" data-bs-toggle="tab" data-bs-target="#leads" type="button">
-                                Student Leads
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="teachers-tab" data-bs-toggle="tab" data-bs-target="#teachers" type="button">
-                                Teachers
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="assignments-tab" data-bs-toggle="tab" data-bs-target="#assignments" type="button">
-                                Assignments
-                            </button>
-                        </li>
-                    </ul>
-                    <div class="tab-content py-3" id="userGuideTabContent">
-                        <div class="tab-pane fade show active" id="overview" role="tabpanel">
-                            <h5>Welcome to Axra Tutor CRM</h5>
-                            <p>This CRM system helps you manage student leads, teachers, assignments, and demos for your tutoring business.</p>
-                            <p>Key features include:</p>
-                            <ul>
-                                <li>Student lead management</li>
-                                <li>Teacher profile management</li>
-                                <li>Intelligent teacher-student matching</li>
-                                <li>Demo scheduling and tracking</li>
-                                <li>Communication templates and notifications</li>
-                                <li>Performance analytics dashboard</li>
-                            </ul>
-                        </div>
-                        <div class="tab-pane fade" id="leads" role="tabpanel">
-                            <h5>Managing Student Leads</h5>
-                            <p>Student leads are potential customers who have expressed interest in tutoring services.</p>
-                            <ol>
-                                <li>Add new leads via the "Add Student Lead" button</li>
-                                <li>View all leads in the Student Leads section</li>
-                                <li>Use the match feature to find suitable teachers</li>
-                                <li>Track lead status (New, Assigned, Converted, Lost)</li>
-                            </ol>
-                        </div>
-                        <div class="tab-pane fade" id="teachers" role="tabpanel">
-                            <h5>Managing Teachers</h5>
-                            <p>Register and manage all tutors in your network.</p>
-                            <ol>
-                                <li>Add new teachers via the "Add Teacher" button</li>
-                                <li>Record their qualifications, experience, and availability</li>
-                                <li>Specify preferred subjects and areas</li>
-                                <li>View teacher performance metrics</li>
-                            </ol>
-                        </div>
-                        <div class="tab-pane fade" id="assignments" role="tabpanel">
-                            <h5>Handling Assignments</h5>
-                            <p>Assignments connect students with teachers for tutoring sessions.</p>
-                            <ol>
-                                <li>Assign teachers to student leads</li>
-                                <li>Schedule demo classes</li>
-                                <li>Record feedback after demos</li>
-                                <li>Track conversion from demo to regular tutoring</li>
-                            </ol>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Contact Support Modal -->
-    <div class="modal fade" id="contactSupportModal" tabindex="-1" aria-labelledby="contactSupportModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header gradient-purple text-white">
-                    <h5 class="modal-title" id="contactSupportModalLabel">Contact Support</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="supportForm">
-                        <div class="mb-3">
-                            <label for="supportSubject" class="form-label">Subject</label>
-                            <select class="form-select" id="supportSubject" required>
-                                <option value="" selected disabled>Select a topic</option>
-                                <option value="Technical Issue">Technical Issue</option>
-                                <option value="Feature Request">Feature Request</option>
-                                <option value="Account Help">Account Help</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="supportMessage" class="form-label">Message</label>
-                            <textarea class="form-control" id="supportMessage" rows="5" required></textarea>
-                        </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn gradient-purple">Submit</button>
-                        </div>
-                    </form>
-                    <div id="supportFormSuccess" class="alert alert-success mt-3 d-none">
-                        Your support request has been submitted. Our team will get back to you soon.
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- User Profile/Settings Modal -->
-    <div class="modal fade" id="userProfileModal" tabindex="-1" aria-labelledby="userProfileModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header gradient-purple text-white">
-                    <h5 class="modal-title" id="userProfileModalLabel">Account Settings</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="d-flex align-items-center mb-4">
-                        <div class="flex-shrink-0">
-                            <div class="bg-royal-purple text-white rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
-                                <i data-feather="user" style="width: 32px; height: 32px;"></i>
-                            </div>
-                        </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h5 class="mb-0">{{ current_user.name }}</h5>
-                            <p class="text-muted mb-0">{{ current_user.email }}</p>
-                        </div>
-                    </div>
-                    
-                    <ul class="nav nav-tabs" id="userProfileTab" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button">
-                                Profile
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="password-tab" data-bs-toggle="tab" data-bs-target="#password" type="button">
-                                Password
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="preferences-tab" data-bs-toggle="tab" data-bs-target="#preferences" type="button">
-                                Preferences
-                            </button>
-                        </li>
-                    </ul>
-                    
-                    <div class="tab-content py-3" id="userProfileTabContent">
-                        <div class="tab-pane fade show active" id="profile" role="tabpanel">
-                            <form id="profileForm">
-                                <div class="mb-3">
-                                    <label for="profileName" class="form-label">Full Name</label>
-                                    <input type="text" class="form-control" id="profileName" value="{{ current_user.name }}">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="profileEmail" class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="profileEmail" value="{{ current_user.email }}" readonly>
-                                </div>
-                                <div class="d-grid">
-                                    <button type="submit" class="btn gradient-purple">Save Changes</button>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="tab-pane fade" id="password" role="tabpanel">
-                            <form id="passwordForm">
-                                <div class="mb-3">
-                                    <label for="currentPassword" class="form-label">Current Password</label>
-                                    <input type="password" class="form-control" id="currentPassword" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="newPassword" class="form-label">New Password</label>
-                                    <input type="password" class="form-control" id="newPassword" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="confirmPassword" class="form-label">Confirm New Password</label>
-                                    <input type="password" class="form-control" id="confirmPassword" required>
-                                </div>
-                                <div class="d-grid">
-                                    <button type="submit" class="btn gradient-purple">Change Password</button>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="tab-pane fade" id="preferences" role="tabpanel">
-                            <form id="preferencesForm">
-                                <div class="mb-3 form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="darkModePreference" checked>
-                                    <label class="form-check-label" for="darkModePreference">Dark Mode</label>
-                                </div>
-                                <div class="mb-3 form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
-                                    <label class="form-check-label" for="emailNotifications">Email Notifications</label>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="notificationFrequency" class="form-label">Notification Frequency</label>
-                                    <select class="form-select" id="notificationFrequency">
-                                        <option value="immediate">Immediate</option>
-                                        <option value="daily">Daily Digest</option>
-                                        <option value="weekly">Weekly Digest</option>
-                                    </select>
-                                </div>
-                                <div class="d-grid">
-                                    <button type="submit" class="btn gradient-purple">Save Preferences</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Global Search Modal -->
-    <div class="modal fade" id="globalSearchModal" tabindex="-1" aria-labelledby="globalSearchModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header gradient-purple text-white">
-                    <h5 class="modal-title" id="globalSearchModalLabel">Search</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="input-group mb-3">
-                        <span class="input-group-text bg-light border-0"><i data-feather="search" class="text-muted"></i></span>
-                        <input type="text" class="form-control border-0 shadow-none" id="globalSearchInput" placeholder="Search students, teachers, or assignments..." autofocus>
-                    </div>
-                    <div id="globalSearchResults" class="mt-3">
-                        <!-- Search results will be displayed here -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

@@ -16,15 +16,7 @@ function initLeadStatusChart() {
     const ctx = document.getElementById('leadStatusChart');
     if (!ctx) return;
     
-    let leadData = { new: 0, assigned: 0, converted: 0, lost: 0 };
-    try {
-        const dataAttr = ctx.getAttribute('data-stats');
-        if (dataAttr) {
-            leadData = JSON.parse(dataAttr) || leadData;
-        }
-    } catch (e) {
-        console.error('Error parsing lead status data:', e);
-    }
+    const leadData = JSON.parse(ctx.getAttribute('data-stats'));
     
     new Chart(ctx, {
         type: 'doughnut',
@@ -38,10 +30,10 @@ function initLeadStatusChart() {
                     leadData.lost || 0
                 ],
                 backgroundColor: [
-                    'rgba(111, 116, 221, 0.8)', // royal-blue-light
-                    'rgba(255, 183, 77, 0.8)', // royal-gold
-                    'rgba(67, 160, 71, 0.8)', // royal-green
-                    'rgba(229, 57, 53, 0.8)'  // royal-red
+                    '#0dcaf0', // info
+                    '#ffc107', // warning
+                    '#198754', // success
+                    '#dc3545'  // danger
                 ],
                 borderWidth: 1
             }]
@@ -70,15 +62,7 @@ function initAssignmentStatusChart() {
     const ctx = document.getElementById('assignmentStatusChart');
     if (!ctx) return;
     
-    let assignmentData = { pending: 0, demo_scheduled: 0, converted: 0, cancelled: 0 };
-    try {
-        const dataAttr = ctx.getAttribute('data-stats');
-        if (dataAttr) {
-            assignmentData = JSON.parse(dataAttr) || assignmentData;
-        }
-    } catch (e) {
-        console.error('Error parsing assignment status data:', e);
-    }
+    const assignmentData = JSON.parse(ctx.getAttribute('data-stats'));
     
     new Chart(ctx, {
         type: 'doughnut',
@@ -92,10 +76,10 @@ function initAssignmentStatusChart() {
                     assignmentData.cancelled || 0
                 ],
                 backgroundColor: [
-                    'rgba(158, 158, 158, 0.8)', // royal-gray
-                    'rgba(100, 111, 212, 0.8)', // royal-purple-lighter
-                    'rgba(67, 160, 71, 0.8)', // royal-green
-                    'rgba(229, 57, 53, 0.8)'  // royal-red
+                    '#6c757d', // secondary
+                    '#0d6efd', // primary
+                    '#198754', // success
+                    '#dc3545'  // danger
                 ],
                 borderWidth: 1
             }]
@@ -124,15 +108,7 @@ function initDemoStatusChart() {
     const ctx = document.getElementById('demoStatusChart');
     if (!ctx) return;
     
-    let demoData = { scheduled: 0, completed: 0, cancelled: 0 };
-    try {
-        const dataAttr = ctx.getAttribute('data-stats');
-        if (dataAttr) {
-            demoData = JSON.parse(dataAttr) || demoData;
-        }
-    } catch (e) {
-        console.error('Error parsing demo status data:', e);
-    }
+    const demoData = JSON.parse(ctx.getAttribute('data-stats'));
     
     new Chart(ctx, {
         type: 'doughnut',
@@ -145,9 +121,9 @@ function initDemoStatusChart() {
                     demoData.cancelled || 0
                 ],
                 backgroundColor: [
-                    'rgba(103, 58, 183, 0.8)', // royal-purple
-                    'rgba(67, 160, 71, 0.8)', // royal-green
-                    'rgba(229, 57, 53, 0.8)'  // royal-red
+                    '#0d6efd', // primary
+                    '#198754', // success
+                    '#dc3545'  // danger
                 ],
                 borderWidth: 1
             }]
@@ -176,29 +152,9 @@ function initMonthlyTrendsChart() {
     const ctx = document.getElementById('monthlyTrendsChart');
     if (!ctx) return;
     
-    let months = [];
-    let leads = [];
-    let conversions = [];
-    
-    try {
-        const monthsAttr = ctx.getAttribute('data-months');
-        const leadsAttr = ctx.getAttribute('data-leads');
-        const conversionsAttr = ctx.getAttribute('data-conversions');
-        
-        if (monthsAttr) {
-            months = JSON.parse(monthsAttr) || [];
-        }
-        
-        if (leadsAttr) {
-            leads = JSON.parse(leadsAttr) || [];
-        }
-        
-        if (conversionsAttr) {
-            conversions = JSON.parse(conversionsAttr) || [];
-        }
-    } catch (e) {
-        console.error('Error parsing monthly trends data:', e);
-    }
+    const months = JSON.parse(ctx.getAttribute('data-months'));
+    const leads = JSON.parse(ctx.getAttribute('data-leads'));
+    const conversions = JSON.parse(ctx.getAttribute('data-conversions'));
     
     new Chart(ctx, {
         type: 'line',
@@ -208,8 +164,8 @@ function initMonthlyTrendsChart() {
                 {
                     label: 'New Leads',
                     data: leads,
-                    borderColor: 'rgba(103, 58, 183, 0.8)', // royal-purple
-                    backgroundColor: 'rgba(103, 58, 183, 0.1)',
+                    borderColor: '#0dcaf0', // info
+                    backgroundColor: 'rgba(13, 202, 240, 0.1)',
                     borderWidth: 2,
                     fill: true,
                     tension: 0.2
@@ -217,8 +173,8 @@ function initMonthlyTrendsChart() {
                 {
                     label: 'Conversions',
                     data: conversions,
-                    borderColor: 'rgba(255, 193, 7, 0.8)', // royal-gold
-                    backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                    borderColor: '#198754', // success
+                    backgroundColor: 'rgba(25, 135, 84, 0.1)',
                     borderWidth: 2,
                     fill: true,
                     tension: 0.2
