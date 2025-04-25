@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
-from wtforms import TextAreaField, SelectField, FloatField, SelectMultipleField, DateTimeField
-from wtforms.validators import DataRequired, Email, Length, ValidationError, Optional
+from wtforms import TextAreaField, SelectField, FloatField, IntegerField, SelectMultipleField, DateTimeField
+from wtforms.validators import DataRequired, Email, Length, ValidationError, Optional, NumberRange
 import json
 
 class LoginForm(FlaskForm):
@@ -50,6 +50,25 @@ class StudentLeadForm(FlaskForm):
                                       ('FEMALE', 'Female')
                                   ],
                                   validators=[DataRequired()])
+    lead_source = SelectField('Lead Source', 
+                           choices=[
+                               ('', 'Select Source'),
+                               ('Google', 'Google'),
+                               ('WhatsApp', 'WhatsApp'),
+                               ('Referral', 'Referral'),
+                               ('Other', 'Other')
+                           ],
+                           validators=[DataRequired()])
+    referral_name = StringField('Referral Name', validators=[Optional(), Length(max=100)])
+    preferred_timing = SelectField('Preferred Demo Timing',
+                                choices=[
+                                    ('', 'Select Timing'),
+                                    ('Morning (9AM-12PM)', 'Morning (9AM-12PM)'),
+                                    ('Afternoon (12PM-3PM)', 'Afternoon (12PM-3PM)'),
+                                    ('Evening (3PM-6PM)', 'Evening (3PM-6PM)'),
+                                    ('Night (6PM-9PM)', 'Night (6PM-9PM)')
+                                ],
+                                validators=[Optional()])
     submit = SubmitField('Save Lead')
 
 class TeacherForm(FlaskForm):
@@ -107,6 +126,8 @@ class TeacherForm(FlaskForm):
                            ('UP', 'UP')
                        ],
                        validators=[DataRequired()])
+    teaching_experience = IntegerField('Teaching Experience (Years)', validators=[Optional(), NumberRange(min=0, max=50)])
+    teaching_experience_details = TextAreaField('Experience Details', validators=[Optional()])
     submit = SubmitField('Save Teacher')
 
 class AssignTeacherForm(FlaskForm):

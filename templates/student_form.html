@@ -111,6 +111,45 @@
                                 {% endif %}
                             </div>
                             
+                            <!-- Lead Source -->
+                            <div class="col-md-6">
+                                <label for="{{ form.lead_source.id }}" class="form-label">Lead Source <span class="text-danger">*</span></label>
+                                {{ form.lead_source(class="form-control", required=true) }}
+                                {% if form.lead_source.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.lead_source.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Referral Name (conditionally shown) -->
+                            <div class="col-md-6" id="referralNameContainer" style="display: none;">
+                                <label for="{{ form.referral_name.id }}" class="form-label">Referral Name</label>
+                                {{ form.referral_name(class="form-control", placeholder="Enter name of the person who referred") }}
+                                {% if form.referral_name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.referral_name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Preferred Demo Timing -->
+                            <div class="col-md-6">
+                                <label for="{{ form.preferred_timing.id }}" class="form-label">Preferred Demo Timing</label>
+                                {{ form.preferred_timing(class="form-control") }}
+                                {% if form.preferred_timing.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.preferred_timing.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
                             <!-- ID Preview (only for new leads) -->
                             {% if request.endpoint == 'new_student_lead' %}
                             <div class="col-12 d-none" id="idPreviewContainer">
@@ -154,6 +193,35 @@
                 updateIdPreview(this, 'leadIdPreview', 'LD');
             });
         }
+        {% endif %}
+        
+        // Show/hide referral name field based on lead source
+        const leadSourceSelect = document.getElementById('lead_source');
+        const referralContainer = document.getElementById('referralNameContainer');
+        
+        if (leadSourceSelect && referralContainer) {
+            // Set initial state
+            toggleReferralNameVisibility();
+            
+            // Add change listener
+            leadSourceSelect.addEventListener('change', toggleReferralNameVisibility);
+            
+            function toggleReferralNameVisibility() {
+                if (leadSourceSelect.value === 'Referral') {
+                    referralContainer.style.display = 'block';
+                    document.getElementById('referral_name').setAttribute('required', 'required');
+                } else {
+                    referralContainer.style.display = 'none';
+                    document.getElementById('referral_name').removeAttribute('required');
+                }
+            }
+        }
+        
+        // Initialize with current values if editing
+        {% if student and student.lead_source == 'Referral' %}
+            if (referralContainer) {
+                referralContainer.style.display = 'block';
+            }
         {% endif %}
     });
 </script>

@@ -21,6 +21,9 @@ class Student(db.Model):
     fee = db.Column(db.Float, nullable=False)
     area = db.Column(db.String(100), nullable=False)
     gender_preference = db.Column(db.String(10), nullable=False)  # MALE, FEMALE, ANY
+    lead_source = db.Column(db.String(50), nullable=True)  # Google, WhatsApp, Referral, Other
+    referral_name = db.Column(db.String(100), nullable=True)  # If lead_source is Referral
+    preferred_timing = db.Column(db.String(50), nullable=True)  # Preferred demo timing
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     status = db.Column(db.String(20), default="New")  # New, Assigned, Converted, Lost
     
@@ -45,6 +48,8 @@ class Teacher(db.Model):
     qualification = db.Column(db.String(100), nullable=False)
     stream = db.Column(db.String(50), nullable=False)
     board = db.Column(db.String(10), nullable=False)  # CBSE, ICSE, UP
+    teaching_experience = db.Column(db.Integer, default=0)  # Years of teaching experience
+    teaching_experience_details = db.Column(db.Text, nullable=True)  # Details about experience
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     status = db.Column(db.String(20), default="Active")  # Active, Inactive
     
