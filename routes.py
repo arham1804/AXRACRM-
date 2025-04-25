@@ -1,11 +1,12 @@
 from app import app, db
 from flask import render_template, redirect, url_for, flash, request, jsonify
 from forms import LoginForm, StudentLeadForm, TeacherForm, AssignTeacherForm, ScheduleDemoForm, FeedbackForm
-from models import Admin, Student, Teacher, TuitionAssignment, Demo, Feedback
+from models import Admin, Student, Teacher, TuitionAssignment, Demo, Feedback, Notification
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
 from helpers import calculate_match_score, generate_dashboard_stats
-from datetime import datetime
+from datetime import datetime, timedelta
+from email_service import send_demo_reminder, send_teacher_demo_notification
 import json
 import logging
 

@@ -158,3 +158,8 @@ class FeedbackForm(FlaskForm):
                                  validators=[DataRequired()])
     comments = TextAreaField('Comments')
     submit = SubmitField('Submit Feedback')
+
+class ReassignTeacherForm(FlaskForm):
+    teacher_id = SelectField('Select New Teacher', coerce=int, validators=[DataRequired()])
+    reason = TextAreaField('Reason for Reassignment', validators=[DataRequired(), Length(min=5, max=500)])
+    submit = SubmitField('Reassign Teacher')

@@ -1,8 +1,9 @@
 from app import db
 from flask_login import UserMixin
-from datetime import datetime
+from datetime import datetime, timedelta
 import uuid
 import json
+from sqlalchemy import or_
 
 class Admin(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -104,3 +105,120 @@ class Feedback(db.Model):
     
     # Relationship
     demo = db.relationship('Demo', backref=db.backref('feedback', lazy=True, uselist=False))
+
+class Notification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    notification_id = db.Column(db.String(10), unique=True, nullable=False)
+    title = db.Column(db.String(100), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    notification_type = db.Column(db.String(20), nullable=False)  # new_lead, assignment, upcoming_demo, unassigned_lead, demo_failed
+    is_read = db.Column(db.Boolean, default=False)
+    is_urgent = db.Column(db.Boolean, default=False)
+    related_id = db.Column(db.Integer, nullable=True)  # Can store student_id, teacher_id, assignment_id, or demo_id
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __init__(self, **kwargs):
+        super(Notification, self).__init__(**kwargs)
+        if not self.notification_id:
+            self.notification_id = f"NOT{uuid.uuid4().hex[:7].upper()}"
+            
+    @staticmethod
+    def create_notification(title, message, notification_type, related_id=None, is_urgent=False):
+        notification = Notification(
+            title=title,
+            message=message,
+            notification_type=notification_type,
+            related_id=related_id,
+            is_urgent=is_urgent
+        )
+        db.session.add(notification)
+        db.session.commit()
+        return notification
+    
+    @staticmethod
+    def get_unread_notifications():
+        return Notification.query.filter_by(is_read=False).order_by(Notification.created_at.desc()).all()
+    
+    @staticmethod
+    def get_recent_notifications(limit=10):
+        return Notification.query.order_by(Notification.created_at.desc()).limit(limit).all()
+    
+    @staticmethod
+    def get_urgent_notifications():
+        return Notification.query.filter_by(is_urgent=True, is_read=False).all()
+    
+    @staticmethod
+    def mark_as_read(notification_id):
+        notification = Notification.query.filter_by(id=notification_id).first()
+        if notification:
+            notification.is_read = True
+            db.session.commit()
+            return True
+        return False
+    
+    @staticmethod
+    def delete_notification(notification_id):
+        notification = Notification.query.filter_by(id=notification_id).first()
+        if notification:
+            db.session.delete(notification)
+            db.session.commit()
+            return True
+        return False
+    
+    @staticmethod
+    def check_unassigned_leads():
+        # Find unassigned leads that are older than 1 hour
+        one_hour_ago = datetime.utcnow() - timedelta(hours=1)
+        unassigned_leads = Student.query.filter(
+            Student.status == "New",
+            Student.created_at <= one_hour_ago
+        ).all()
+        
+        for lead in unassigned_leads:
+            # Check if we already have a notification for this lead
+            existing_notification = Notification.query.filter_by(
+                notification_type='unassigned_lead',
+                related_id=lead.id,
+                is_read=False
+            ).first()
+            
+            if not existing_notification:
+                Notification.create_notification(
+                    title=f"Unassigned Lead: {lead.name}",
+                    message=f"Lead {lead.name} has been unassigned for more than 1 hour. Please assign a teacher.",
+                    notification_type='unassigned_lead',
+                    related_id=lead.id,
+                    is_urgent=True
+                )
+    
+    @staticmethod
+    def check_upcoming_demos():
+        # Find demos that are scheduled within the next hour
+        now = datetime.utcnow()
+        one_hour_later = now + timedelta(hours=1)
+        
+        upcoming_demos = Demo.query.filter(
+            Demo.status == "Scheduled",
+            Demo.scheduled_date >= now,
+            Demo.scheduled_date <= one_hour_later
+        ).all()
+        
+        for demo in upcoming_demos:
+            # Check if we already have a notification for this demo
+            existing_notification = Notification.query.filter_by(
+                notification_type='upcoming_demo',
+                related_id=demo.id,
+                is_read=False
+            ).first()
+            
+            if not existing_notification:
+                student_name = demo.assignment.student.name
+                teacher_name = demo.assignment.teacher.name
+                
+                Notification.create_notification(
+                    title=f"Upcoming Demo: {student_name} with {teacher_name}",
+                    message=f"A demo for {student_name} with {teacher_name} is scheduled within the next hour at {demo.scheduled_date.strftime('%H:%M')}.",
+                    notification_type='upcoming_demo',
+                    related_id=demo.id,
+                    is_urgent=True
+                )
