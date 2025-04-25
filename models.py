@@ -3,7 +3,7 @@ from flask_login import UserMixin
 from datetime import datetime, timedelta
 import uuid
 import json
-from sqlalchemy import or_
+from sqlalchemy import or_, Text
 
 class Admin(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -222,3 +222,67 @@ class Notification(db.Model):
                     related_id=demo.id,
                     is_urgent=True
                 )
+
+class CommunicationTemplate(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    template_id = db.Column(db.String(10), unique=True, nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    subject = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    type = db.Column(db.String(50), nullable=False)  # email, sms, whatsapp
+    category = db.Column(db.String(50), nullable=False)  # lead_followup, reminder, confirmation, etc.
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __init__(self, **kwargs):
+        super(CommunicationTemplate, self).__init__(**kwargs)
+        if not self.template_id:
+            self.template_id = f"TPL{uuid.uuid4().hex[:7].upper()}"
+    
+    def render_template(self, **kwargs):
+        """
+        Render the template content with provided variables
+        
+        Parameters:
+        - kwargs: Dictionary of variables to substitute in the template
+          (e.g., student_name, teacher_name, demo_date, etc.)
+        
+        Returns:
+        - Tuple of (rendered_subject, rendered_content)
+        """
+        rendered_subject = self.subject
+        rendered_content = self.content
+        
+        # Replace variables in template content
+        for key, value in kwargs.items():
+            placeholder = f"{{{{{key}}}}}"
+            rendered_subject = rendered_subject.replace(placeholder, str(value))
+            rendered_content = rendered_content.replace(placeholder, str(value))
+            
+        return rendered_subject, rendered_content
+        
+class Communication(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    communication_id = db.Column(db.String(10), unique=True, nullable=False)
+    template_id = db.Column(db.Integer, db.ForeignKey('communication_template.id'), nullable=True)
+    subject = db.Column(db.String(200), nullable=True)  # For emails
+    content = db.Column(db.Text, nullable=False)
+    type = db.Column(db.String(50), nullable=False)  # email, sms, whatsapp
+    status = db.Column(db.String(20), default="Pending")  # Pending, Sent, Failed
+    recipient = db.Column(db.String(100), nullable=False)  # Email or phone number
+    recipient_name = db.Column(db.String(100), nullable=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=True)
+    teacher_id = db.Column(db.Integer, db.ForeignKey('teacher.id'), nullable=True)
+    sent_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    template = db.relationship('CommunicationTemplate', backref=db.backref('communications', lazy=True))
+    student = db.relationship('Student', backref=db.backref('communications', lazy=True))
+    teacher = db.relationship('Teacher', backref=db.backref('communications', lazy=True))
+    
+    def __init__(self, **kwargs):
+        super(Communication, self).__init__(**kwargs)
+        if not self.communication_id:
+            self.communication_id = f"COM{uuid.uuid4().hex[:7].upper()}"

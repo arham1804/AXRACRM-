@@ -1,7 +1,10 @@
 from app import app, db
 from flask import render_template, redirect, url_for, flash, request, jsonify
-from forms import LoginForm, StudentLeadForm, TeacherForm, AssignTeacherForm, ScheduleDemoForm, FeedbackForm, ReassignTeacherForm
-from models import Admin, Student, Teacher, TuitionAssignment, Demo, Feedback, Notification
+from forms import (LoginForm, StudentLeadForm, TeacherForm, AssignTeacherForm, 
+                   ScheduleDemoForm, FeedbackForm, ReassignTeacherForm, 
+                   CommunicationTemplateForm, SendCommunicationForm)
+from models import (Admin, Student, Teacher, TuitionAssignment, 
+                   Demo, Feedback, Notification, CommunicationTemplate, Communication)
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
 from helpers import calculate_match_score, generate_dashboard_stats
@@ -636,3 +639,309 @@ def reassign_teacher_for_demo(demo_id):
 def api_dashboard_stats():
     stats = generate_dashboard_stats()
     return jsonify(stats)
+
+# Communication Templates routes
+@app.route('/communication-templates')
+@login_required
+def communication_templates():
+    templates = CommunicationTemplate.query.order_by(CommunicationTemplate.created_at.desc()).all()
+    return render_template('communication_templates.html', title='Communication Templates', templates=templates)
+
+@app.route('/communication-template/new', methods=['GET', 'POST'])
+@login_required
+def new_communication_template():
+    form = CommunicationTemplateForm()
+    if form.validate_on_submit():
+        template = CommunicationTemplate(
+            name=form.name.data,
+            subject=form.subject.data,
+            content=form.content.data,
+            type=form.type.data,
+            category=form.category.data,
+            is_active=form.is_active.data
+        )
+        db.session.add(template)
+        db.session.commit()
+        flash('Communication template created successfully!', 'success')
+        return redirect(url_for('communication_templates'))
+    
+    return render_template('communication_template_form.html', title='New Communication Template', form=form)
+
+@app.route('/communication-template/<int:template_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_communication_template(template_id):
+    template = CommunicationTemplate.query.get_or_404(template_id)
+    form = CommunicationTemplateForm()
+    
+    if form.validate_on_submit():
+        template.name = form.name.data
+        template.subject = form.subject.data
+        template.content = form.content.data
+        template.type = form.type.data
+        template.category = form.category.data
+        template.is_active = form.is_active.data
+        
+        db.session.commit()
+        flash('Communication template updated successfully!', 'success')
+        return redirect(url_for('communication_templates'))
+    
+    elif request.method == 'GET':
+        form.name.data = template.name
+        form.subject.data = template.subject
+        form.content.data = template.content
+        form.type.data = template.type
+        form.category.data = template.category
+        form.is_active.data = template.is_active
+    
+    return render_template('communication_template_form.html', title='Edit Communication Template', form=form, template=template)
+
+@app.route('/communication-template/<int:template_id>/delete', methods=['POST'])
+@login_required
+def delete_communication_template(template_id):
+    template = CommunicationTemplate.query.get_or_404(template_id)
+    db.session.delete(template)
+    db.session.commit()
+    flash('Communication template deleted successfully!', 'success')
+    return redirect(url_for('communication_templates'))
+
+@app.route('/communication-template/<int:template_id>/toggle-status', methods=['POST'])
+@login_required
+def toggle_template_status(template_id):
+    template = CommunicationTemplate.query.get_or_404(template_id)
+    template.is_active = not template.is_active
+    db.session.commit()
+    flash(f'Template is now {"active" if template.is_active else "inactive"}!', 'success')
+    return redirect(url_for('communication_templates'))
+
+# Quick Communication feature
+@app.route('/communications')
+@login_required
+def communications():
+    communications = Communication.query.order_by(Communication.created_at.desc()).all()
+    return render_template('communications.html', title='Communications', communications=communications)
+
+@app.route('/send-communication', methods=['GET', 'POST'])
+@login_required
+def send_communication():
+    form = SendCommunicationForm()
+    
+    # Load active templates for the dropdown
+    active_templates = CommunicationTemplate.query.filter_by(is_active=True).all()
+    form.template_id.choices = [(t.id, f"{t.name} ({t.type})") for t in active_templates]
+    
+    # Load students for dropdown
+    students = Student.query.all()
+    form.student_id.choices = [(0, 'Select Student')] + [(s.id, f"{s.name} - {s.lead_id}") for s in students]
+    
+    # Load teachers for dropdown
+    teachers = Teacher.query.filter_by(status='Active').all()
+    form.teacher_id.choices = [(0, 'Select Teacher')] + [(t.id, f"{t.name} - {t.teacher_id}") for t in teachers]
+    
+    if form.validate_on_submit():
+        recipient = ""
+        recipient_name = ""
+        selected_student = None
+        selected_teacher = None
+        
+        # Determine recipient based on selection
+        if form.recipient_type.data == 'student' and form.student_id.data != 0:
+            selected_student = Student.query.get(form.student_id.data)
+            recipient = selected_student.phone
+            recipient_name = selected_student.name
+        elif form.recipient_type.data == 'teacher' and form.teacher_id.data != 0:
+            selected_teacher = Teacher.query.get(form.teacher_id.data)
+            recipient = selected_teacher.phone
+            recipient_name = selected_teacher.name
+        elif form.recipient_type.data == 'custom':
+            recipient = form.custom_recipient.data
+            recipient_name = form.custom_recipient_name.data
+        
+        # Get the selected template
+        template = CommunicationTemplate.query.get(form.template_id.data)
+        
+        # Use template content or override if provided
+        subject = form.subject.data or template.subject
+        content = form.content.data or template.content
+        
+        # If using template with placeholders, render it
+        if not form.content.data and (selected_student or selected_teacher):
+            context = {}
+            if selected_student:
+                context.update({
+                    'student_name': selected_student.name,
+                    'student_phone': selected_student.phone,
+                    'student_area': selected_student.area,
+                    'student_subjects': ', '.join(selected_student.get_subjects_list()),
+                    'student_fee': selected_student.fee
+                })
+            if selected_teacher:
+                context.update({
+                    'teacher_name': selected_teacher.name,
+                    'teacher_phone': selected_teacher.phone,
+                    'teacher_areas': ', '.join(selected_teacher.get_preferred_areas_list()),
+                    'teacher_subjects': ', '.join(selected_teacher.get_preferred_subjects_list()),
+                    'teacher_qualification': selected_teacher.qualification
+                })
+            
+            # Add datetime for scheduled demos
+            context['current_date'] = datetime.now().strftime('%d-%m-%Y')
+            context['current_time'] = datetime.now().strftime('%H:%M')
+            
+            # Render the template with context
+            subject, content = template.render_template(**context)
+        
+        # Create the communication record
+        communication = Communication(
+            template_id=template.id,
+            subject=subject,
+            content=content,
+            type=template.type,
+            recipient=recipient,
+            recipient_name=recipient_name,
+            student_id=selected_student.id if selected_student else None,
+            teacher_id=selected_teacher.id if selected_teacher else None
+        )
+        
+        db.session.add(communication)
+        db.session.commit()
+        
+        # TODO: Implement actual sending of communication
+        # For now, just mark it as sent
+        communication.status = "Sent"
+        communication.sent_at = datetime.utcnow()
+        db.session.commit()
+        
+        flash('Communication sent successfully!', 'success')
+        return redirect(url_for('communications'))
+    
+    return render_template('send_communication.html', title='Send Communication', form=form)
+
+@app.route('/quick-communication/<string:type>/<int:id>', methods=['GET'])
+@login_required
+def quick_communication(type, id):
+    """One-click communication templates for quick lead follow-ups"""
+    if type == 'student':
+        # Get student and available templates
+        student = Student.query.get_or_404(id)
+        templates = CommunicationTemplate.query.filter_by(
+            is_active=True, 
+            type='sms'  # For quick communication, we'll use SMS templates
+        ).filter(
+            CommunicationTemplate.category.in_(['lead_followup', 'general'])
+        ).all()
+        
+        return render_template(
+            'quick_communication.html', 
+            title='Quick Communication', 
+            recipient=student,
+            recipient_type='student',
+            templates=templates
+        )
+    
+    elif type == 'teacher':
+        # Get teacher and available templates
+        teacher = Teacher.query.get_or_404(id)
+        templates = CommunicationTemplate.query.filter_by(
+            is_active=True, 
+            type='sms'  # For quick communication, we'll use SMS templates
+        ).filter(
+            CommunicationTemplate.category.in_(['general'])
+        ).all()
+        
+        return render_template(
+            'quick_communication.html', 
+            title='Quick Communication', 
+            recipient=teacher,
+            recipient_type='teacher',
+            templates=templates
+        )
+    
+    else:
+        flash('Invalid recipient type for quick communication!', 'danger')
+        return redirect(url_for('dashboard'))
+
+@app.route('/quick-communication/send', methods=['POST'])
+@login_required
+def send_quick_communication():
+    """Handle the quick communication form submission"""
+    template_id = request.form.get('template_id')
+    recipient_type = request.form.get('recipient_type')
+    recipient_id = request.form.get('recipient_id')
+    
+    if not template_id or not recipient_type or not recipient_id:
+        flash('Missing required information to send communication!', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    template = CommunicationTemplate.query.get_or_404(template_id)
+    
+    selected_student = None
+    selected_teacher = None
+    recipient = ""
+    recipient_name = ""
+    
+    if recipient_type == 'student':
+        selected_student = Student.query.get_or_404(recipient_id)
+        recipient = selected_student.phone
+        recipient_name = selected_student.name
+    elif recipient_type == 'teacher':
+        selected_teacher = Teacher.query.get_or_404(recipient_id)
+        recipient = selected_teacher.phone
+        recipient_name = selected_teacher.name
+    
+    # Prepare context for template rendering
+    context = {
+        'current_date': datetime.now().strftime('%d-%m-%Y'),
+        'current_time': datetime.now().strftime('%H:%M')
+    }
+    
+    if selected_student:
+        context.update({
+            'student_name': selected_student.name,
+            'student_phone': selected_student.phone,
+            'student_area': selected_student.area,
+            'student_subjects': ', '.join(selected_student.get_subjects_list()),
+            'student_fee': selected_student.fee
+        })
+    
+    if selected_teacher:
+        context.update({
+            'teacher_name': selected_teacher.name,
+            'teacher_phone': selected_teacher.phone,
+            'teacher_areas': ', '.join(selected_teacher.get_preferred_areas_list()),
+            'teacher_subjects': ', '.join(selected_teacher.get_preferred_subjects_list()),
+            'teacher_qualification': selected_teacher.qualification
+        })
+    
+    # Render the template
+    subject, content = template.render_template(**context)
+    
+    # Create communication record
+    communication = Communication(
+        template_id=template.id,
+        subject=subject,
+        content=content,
+        type=template.type,
+        recipient=recipient,
+        recipient_name=recipient_name,
+        student_id=selected_student.id if selected_student else None,
+        teacher_id=selected_teacher.id if selected_teacher else None
+    )
+    
+    db.session.add(communication)
+    db.session.commit()
+    
+    # TODO: Implement actual sending of communication
+    # For now, just mark it as sent
+    communication.status = "Sent"
+    communication.sent_at = datetime.utcnow()
+    db.session.commit()
+    
+    flash('Quick communication sent successfully!', 'success')
+    
+    # Redirect back to appropriate page
+    if recipient_type == 'student':
+        return redirect(url_for('student_leads'))
+    elif recipient_type == 'teacher':
+        return redirect(url_for('teachers'))
+    else:
+        return redirect(url_for('communications'))

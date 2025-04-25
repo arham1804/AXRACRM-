@@ -163,3 +163,44 @@ class ReassignTeacherForm(FlaskForm):
     teacher_id = SelectField('Select New Teacher', coerce=int, validators=[DataRequired()])
     reason = TextAreaField('Reason for Reassignment', validators=[DataRequired(), Length(min=5, max=500)])
     submit = SubmitField('Reassign Teacher')
+
+class CommunicationTemplateForm(FlaskForm):
+    name = StringField('Template Name', validators=[DataRequired(), Length(min=2, max=100)])
+    subject = StringField('Email Subject', validators=[DataRequired(), Length(min=2, max=200)])
+    content = TextAreaField('Template Content', validators=[DataRequired(), Length(min=10)])
+    type = SelectField('Communication Type', 
+                      choices=[
+                          ('email', 'Email'),
+                          ('sms', 'SMS'),
+                          ('whatsapp', 'WhatsApp')
+                      ],
+                      validators=[DataRequired()])
+    category = SelectField('Template Category', 
+                         choices=[
+                             ('lead_followup', 'Lead Follow-up'),
+                             ('demo_confirmation', 'Demo Confirmation'),
+                             ('demo_reminder', 'Demo Reminder'),
+                             ('demo_feedback', 'Demo Feedback'),
+                             ('payment_reminder', 'Payment Reminder'),
+                             ('general', 'General Communication')
+                         ],
+                         validators=[DataRequired()])
+    is_active = BooleanField('Active Template', default=True)
+    submit = SubmitField('Save Template')
+
+class SendCommunicationForm(FlaskForm):
+    template_id = SelectField('Select Template', coerce=int, validators=[DataRequired()])
+    recipient_type = SelectField('Send To', 
+                               choices=[
+                                   ('student', 'Student'),
+                                   ('teacher', 'Teacher'),
+                                   ('custom', 'Custom Recipient')
+                               ],
+                               validators=[DataRequired()])
+    custom_recipient = StringField('Custom Recipient (Email/Phone)', validators=[Optional(), Length(max=100)])
+    custom_recipient_name = StringField('Custom Recipient Name', validators=[Optional(), Length(max=100)])
+    subject = StringField('Subject Override', validators=[Optional(), Length(max=200)])
+    content = TextAreaField('Content Override', validators=[Optional()])
+    student_id = SelectField('Select Student', coerce=int, validators=[Optional()])
+    teacher_id = SelectField('Select Teacher', coerce=int, validators=[Optional()])
+    submit = SubmitField('Send Communication')
