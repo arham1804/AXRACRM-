@@ -32,7 +32,7 @@ $(document).ready(function() {
     }
 });
 
-// Lead Status Chart
+// Lead Status Chart with Nawabi styling
 function initLeadStatusChart() {
     try {
         const ctx = document.getElementById('leadStatusChart');
@@ -58,6 +58,22 @@ function initLeadStatusChart() {
         
         console.log('Lead status data:', leadData);
         
+        // Nawabi color scheme
+        const colors = {
+            new: '#082567',        // sapphire blue
+            assigned: '#ffbf00',   // amber
+            converted: '#046307',  // emerald
+            lost: '#be0032'        // ruby
+        };
+        
+        // Glowing shadow effect for the chart
+        const nawabi = {
+            fontFamily: "'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+            fontSize: 12,
+            titleSize: 16,
+            fontColor: '#514966',  // dark purple-gray
+        };
+        
         new Chart(ctx, {
             type: 'doughnut',
             data: {
@@ -70,28 +86,88 @@ function initLeadStatusChart() {
                         leadData.lost || 0
                     ],
                     backgroundColor: [
-                        '#0dcaf0', // info
-                        '#ffc107', // warning
-                        '#198754', // success
-                        '#dc3545'  // danger
+                        colors.new,
+                        colors.assigned,
+                        colors.converted,
+                        colors.lost
                     ],
-                    borderWidth: 1
+                    borderWidth: 2,
+                    borderColor: 'rgba(255,255,255,0.8)',
+                    hoverBorderWidth: 4,
+                    hoverBorderColor: 'white',
+                    hoverOffset: 10
                 }]
             },
             options: {
                 responsive: true,
+                cutout: '75%',
+                radius: '90%',
                 plugins: {
                     legend: {
                         position: 'bottom',
                         labels: {
-                            color: '#f8f9fa' // light text color for dark theme
+                            color: nawabi.fontColor,
+                            font: {
+                                family: nawabi.fontFamily,
+                                size: nawabi.fontSize,
+                                weight: 'bold'
+                            },
+                            padding: 20,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
                         }
                     },
                     title: {
                         display: true,
                         text: 'Lead Status Distribution',
-                        color: '#f8f9fa'
+                        color: '#6a0dad', // nawabi purple
+                        font: {
+                            family: nawabi.fontFamily,
+                            size: nawabi.titleSize,
+                            weight: 'bold'
+                        },
+                        padding: {
+                            top: 10,
+                            bottom: 20
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(255,255,255,0.9)',
+                        titleColor: '#6a0dad',
+                        bodyColor: '#302942',
+                        borderColor: '#e2dcea',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        displayColors: true,
+                        boxPadding: 8,
+                        bodyFont: {
+                            family: nawabi.fontFamily
+                        },
+                        titleFont: {
+                            family: nawabi.fontFamily,
+                            weight: 'bold'
+                        },
+                        callbacks: {
+                            // Add percentage to tooltip
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const value = context.raw;
+                                const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                return `${context.label}: ${value} (${percentage}%)`;
+                            }
+                        }
                     }
+                },
+                elements: {
+                    arc: {
+                        borderWidth: 2
+                    }
+                },
+                animation: {
+                    animateScale: true,
+                    animateRotate: true,
+                    duration: 1500,
+                    easing: 'easeOutCirc'
                 }
             }
         });
@@ -102,7 +178,7 @@ function initLeadStatusChart() {
     }
 }
 
-// Assignment Status Chart
+// Assignment Status Chart with Nawabi styling
 function initAssignmentStatusChart() {
     try {
         const ctx = document.getElementById('assignmentStatusChart');
@@ -128,6 +204,22 @@ function initAssignmentStatusChart() {
         
         console.log('Assignment status data:', assignmentData);
         
+        // Nawabi color scheme
+        const colors = {
+            pending: '#ffd700',     // gold
+            demo_scheduled: '#6a0dad', // purple
+            converted: '#046307',   // emerald
+            cancelled: '#be0032'    // ruby
+        };
+        
+        // Chart settings with Nawabi styling
+        const nawabi = {
+            fontFamily: "'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+            fontSize: 12,
+            titleSize: 16,
+            fontColor: '#514966',   // dark purple-gray
+        };
+        
         new Chart(ctx, {
             type: 'doughnut',
             data: {
@@ -140,28 +232,88 @@ function initAssignmentStatusChart() {
                         assignmentData.cancelled || 0
                     ],
                     backgroundColor: [
-                        '#6c757d', // secondary
-                        '#0d6efd', // primary
-                        '#198754', // success
-                        '#dc3545'  // danger
+                        colors.pending,
+                        colors.demo_scheduled,
+                        colors.converted,
+                        colors.cancelled
                     ],
-                    borderWidth: 1
+                    borderWidth: 2,
+                    borderColor: 'rgba(255,255,255,0.8)',
+                    hoverBorderWidth: 4,
+                    hoverBorderColor: 'white',
+                    hoverOffset: 10
                 }]
             },
             options: {
                 responsive: true,
+                cutout: '75%',
+                radius: '90%',
                 plugins: {
                     legend: {
                         position: 'bottom',
                         labels: {
-                            color: '#f8f9fa' // light text color for dark theme
+                            color: nawabi.fontColor,
+                            font: {
+                                family: nawabi.fontFamily,
+                                size: nawabi.fontSize,
+                                weight: 'bold'
+                            },
+                            padding: 20,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
                         }
                     },
                     title: {
                         display: true,
                         text: 'Assignment Status Distribution',
-                        color: '#f8f9fa'
+                        color: '#6a0dad', // nawabi purple
+                        font: {
+                            family: nawabi.fontFamily,
+                            size: nawabi.titleSize,
+                            weight: 'bold'
+                        },
+                        padding: {
+                            top: 10,
+                            bottom: 20
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(255,255,255,0.9)',
+                        titleColor: '#6a0dad',
+                        bodyColor: '#302942',
+                        borderColor: '#e2dcea',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        displayColors: true,
+                        boxPadding: 8,
+                        bodyFont: {
+                            family: nawabi.fontFamily
+                        },
+                        titleFont: {
+                            family: nawabi.fontFamily,
+                            weight: 'bold'
+                        },
+                        callbacks: {
+                            // Add percentage to tooltip
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const value = context.raw;
+                                const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                return `${context.label}: ${value} (${percentage}%)`;
+                            }
+                        }
                     }
+                },
+                elements: {
+                    arc: {
+                        borderWidth: 2
+                    }
+                },
+                animation: {
+                    animateScale: true,
+                    animateRotate: true,
+                    duration: 1500,
+                    easing: 'easeOutCirc'
                 }
             }
         });
