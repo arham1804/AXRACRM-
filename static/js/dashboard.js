@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize charts
     initLeadStatusChart();
     initAssignmentStatusChart();
+    initDemoStatusChart();
     initMonthlyTrendsChart();
     
     // Add event listeners
@@ -95,6 +96,50 @@ function initAssignmentStatusChart() {
                 title: {
                     display: true,
                     text: 'Assignment Status Distribution',
+                    color: '#f8f9fa'
+                }
+            }
+        }
+    });
+}
+
+// Demo Status Chart
+function initDemoStatusChart() {
+    const ctx = document.getElementById('demoStatusChart');
+    if (!ctx) return;
+    
+    const demoData = JSON.parse(ctx.getAttribute('data-stats'));
+    
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Scheduled', 'Completed', 'Cancelled'],
+            datasets: [{
+                data: [
+                    demoData.scheduled || 0,
+                    demoData.completed || 0,
+                    demoData.cancelled || 0
+                ],
+                backgroundColor: [
+                    '#0d6efd', // primary
+                    '#198754', // success
+                    '#dc3545'  // danger
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: '#f8f9fa' // light text color for dark theme
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'Demo Status Distribution',
                     color: '#f8f9fa'
                 }
             }
