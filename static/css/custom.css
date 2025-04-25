@@ -8,6 +8,12 @@
     --nawabi-green: #10b981;
     --nawabi-orange: #f97316;
     --nawabi-purple: #8b5cf6;
+    
+    /* Progress indicator colors */
+    --progress-new: #3b82f6;
+    --progress-assigned: #f59e0b;
+    --progress-demo: #6366f1;
+    --progress-converted: #10b981;
 }
 
 body {
