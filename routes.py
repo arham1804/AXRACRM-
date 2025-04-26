@@ -467,6 +467,17 @@ def provide_feedback(demo_id):
         
         # Update assignment status based on student interest
         assignment = demo.assignment
+        # Ensure we have a valid student_id
+        if assignment.student_id is None:
+            # Fix the assignment to use the proper student_id from the relationship
+            student = demo.assignment.student
+            if student:
+                assignment.student_id = student.id
+            else:
+                # If no student is found, we can't proceed
+                flash('Error: No student found for this assignment!', 'danger')
+                return redirect(url_for('demo_tracking'))
+        
         if form.student_interest.data == 'Interested':
             assignment.status = 'Converted'
             assignment.student.status = 'Converted'
@@ -633,6 +644,11 @@ def reassign_teacher_for_demo(demo_id):
     if form.validate_on_submit():
         new_teacher = Teacher.query.get(form.teacher_id.data)
         
+        # Validate student is not None and has a valid ID before creating the assignment
+        if student is None or student.id is None:
+            flash('Error: Cannot reassign teacher because student information is missing.', 'danger')
+            return redirect(url_for('demo_tracking'))
+        
         # Create new assignment
         new_assignment = TuitionAssignment(
             student_id=student.id,
@@ -643,6 +659,10 @@ def reassign_teacher_for_demo(demo_id):
         
         # Update old assignment status
         old_assignment = demo.assignment
+        # Ensure old_assignment has a valid student_id
+        if old_assignment.student_id is None and old_assignment.student is not None:
+            old_assignment.student_id = old_assignment.student.id
+        
         old_assignment.status = 'Cancelled'
         
         # Create notification for both new teacher and old teacher
