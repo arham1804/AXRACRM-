@@ -19,11 +19,27 @@
     <!-- Custom styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
     
+    <!-- jQuery (load first) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- jQuery Initialization Check -->
+    <script>
+        if (typeof jQuery === 'undefined') {
+            console.error('jQuery is not loaded! Attempting to load it again...');
+            document.write('<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"><\/script>');
+        } else {
+            console.log('jQuery is loaded successfully');
+        }
+    </script>
+    
     <!-- Feather Icons -->
     <script src="https://unpkg.com/feather-icons"></script>
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Toast notifications -->
+    <script src="{{ url_for('static', filename='js/toastNotification.js') }}"></script>
     
     <!-- Mobile webapp meta tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -266,27 +282,16 @@
     
     <!-- Toast container for notifications -->
     <div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
-
-    <!-- jQuery (load first, synchronously) -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
-    <!-- jQuery Initialization Check -->
+    <!-- Helper function to safely run jQuery code -->
     <script>
-        // Check if jQuery is properly loaded
-        if (typeof jQuery === 'undefined') {
-            console.error('jQuery is not loaded! Attempting to load it again...');
-            document.write('<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"><\/script>');
-        } else {
-            console.log('jQuery is loaded successfully');
-        }
-        
         // Define a global function to run when jQuery is ready
         function jQueryReady(callback) {
             if (window.jQuery) {
                 callback();
             } else {
                 // If jQuery isn't loaded yet, wait a bit and try again
-                setTimeout(function() { jQueryReady(callback); }, 100);
+                setTimeout(function() { jQueryReady(callback); }, 50);
             }
         }
     </script>
@@ -305,9 +310,6 @@
         jQueryReady(function() {
             // Load scripts sequentially in order of dependency
             $.getScript("{{ url_for('static', filename='js/formValidation.js') }}")
-                .then(function() {
-                    return $.getScript("{{ url_for('static', filename='js/toastNotification.js') }}");
-                })
                 .then(function() {
                     return $.getScript("{{ url_for('static', filename='js/exportUtility.js') }}");
                 })

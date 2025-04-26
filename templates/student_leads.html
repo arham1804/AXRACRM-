@@ -45,7 +45,7 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-hover table-striped">
+                        <table id="studentLeadsTable" class="table table-hover table-striped">
                             <thead>
                                 <tr>
                                     <th>Lead ID</th>
@@ -144,7 +144,7 @@
         
         // Use the export utility for the leads table
         if (typeof addExportDropdown === 'function') {
-            addExportDropdown('leadsTableExport', 'table', 'student_leads');
+            addExportDropdown('leadsTableExport', 'studentLeadsTable', 'student_leads');
             console.log('Export utility initialized for student leads table');
         } else {
             console.warn('Export utility not available');
