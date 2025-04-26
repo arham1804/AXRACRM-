@@ -25,6 +25,7 @@ class StudentLeadForm(FlaskForm):
                             validators=[DataRequired()])
     subjects = SelectMultipleField('Subjects', 
                                   choices=[
+                                      ('All Subjects', 'All Subjects'),
                                       ('Mathematics', 'Mathematics'),
                                       ('Science', 'Science'),
                                       ('Physics', 'Physics'),
@@ -84,6 +85,7 @@ class TeacherForm(FlaskForm):
     
     preferred_subjects = SelectMultipleField('Preferred Subjects', 
                                           choices=[
+                                              ('All Subjects', 'All Subjects'),
                                               ('Mathematics', 'Mathematics'),
                                               ('Science', 'Science'),
                                               ('Physics', 'Physics'),
