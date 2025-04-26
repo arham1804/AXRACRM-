@@ -5,6 +5,12 @@ function initializePage() {
     try {
         console.log('Initializing dashboard page...');
         
+        // Make sure Chart.js is loaded
+        if (typeof Chart === 'undefined') {
+            console.error('Chart.js is not loaded! Unable to initialize charts.');
+            return;
+        }
+        
         // Initialize charts
         initLeadStatusChart();
         initAssignmentStatusChart();
@@ -15,7 +21,11 @@ function initializePage() {
         setupRefreshButton();
         
         // Setup export buttons
-        setupExportButtons();
+        if (typeof addExportDropdown === 'function') {
+            setupExportButtons();
+        } else {
+            console.warn('Export utility not loaded properly');
+        }
         
         console.log('Dashboard initialized successfully');
     } catch (error) {
@@ -318,91 +328,81 @@ function initMonthlyTrendsChart() {
             return;
         }
         
+        // Default data in case parsing fails
+        const defaultMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+        const defaultLeads = [0, 0, 0, 0, 0, 0];
+        const defaultConversions = [0, 0, 0, 0, 0, 0];
+        
         // Safely parse months data
-        let months;
+        let months = defaultMonths;
         try {
             let monthsAttr = ctx.getAttribute('data-months');
-            if (!monthsAttr) {
-                console.warn('No data-months attribute found on monthly trends chart');
-                months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-            } else {
-                // Try to parse it as JSON if it's a string
-                if (typeof monthsAttr === 'string') {
-                    // Handle possible HTML-escaped JSON
-                    monthsAttr = monthsAttr.replace(/&quot;/g, '"')
-                                       .replace(/&#39;/g, "'")
-                                       .replace(/&lt;/g, '<')
-                                       .replace(/&gt;/g, '>');
-                    months = JSON.parse(monthsAttr);
-                } else if (typeof monthsAttr === 'object') {
-                    // If it's already an object, use it directly
-                    months = monthsAttr;
-                } else {
-                    // Fallback to default data
-                    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+            if (monthsAttr) {
+                // Unescape HTML entities first
+                monthsAttr = monthsAttr.replace(/&quot;/g, '"')
+                                   .replace(/&#39;/g, "'")
+                                   .replace(/&lt;/g, '<')
+                                   .replace(/&gt;/g, '>');
+                                   
+                // Try to parse JSON
+                if (monthsAttr.trim().startsWith('[')) {
+                    const parsedData = JSON.parse(monthsAttr);
+                    if (Array.isArray(parsedData) && parsedData.length > 0) {
+                        months = parsedData;
+                    }
                 }
             }
         } catch (e) {
             console.error('Failed to parse months data:', e);
-            months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+            months = defaultMonths;
         }
         
         // Safely parse leads data
-        let leads;
+        let leads = defaultLeads;
         try {
             let leadsAttr = ctx.getAttribute('data-leads');
-            if (!leadsAttr) {
-                console.warn('No data-leads attribute found on monthly trends chart');
-                leads = [0, 0, 0, 0, 0, 0];
-            } else {
-                // Try to parse it as JSON if it's a string
-                if (typeof leadsAttr === 'string') {
-                    // Handle possible HTML-escaped JSON
-                    leadsAttr = leadsAttr.replace(/&quot;/g, '"')
-                                     .replace(/&#39;/g, "'")
-                                     .replace(/&lt;/g, '<')
-                                     .replace(/&gt;/g, '>');
-                    leads = JSON.parse(leadsAttr);
-                } else if (typeof leadsAttr === 'object') {
-                    // If it's already an object, use it directly
-                    leads = leadsAttr;
-                } else {
-                    // Fallback to default data
-                    leads = [0, 0, 0, 0, 0, 0];
+            if (leadsAttr) {
+                // Unescape HTML entities first
+                leadsAttr = leadsAttr.replace(/&quot;/g, '"')
+                                   .replace(/&#39;/g, "'")
+                                   .replace(/&lt;/g, '<')
+                                   .replace(/&gt;/g, '>');
+                                   
+                // Try to parse JSON
+                if (leadsAttr.trim().startsWith('[')) {
+                    const parsedData = JSON.parse(leadsAttr);
+                    if (Array.isArray(parsedData)) {
+                        leads = parsedData;
+                    }
                 }
             }
         } catch (e) {
             console.error('Failed to parse leads data:', e);
-            leads = [0, 0, 0, 0, 0, 0];
+            leads = defaultLeads;
         }
         
         // Safely parse conversions data
-        let conversions;
+        let conversions = defaultConversions;
         try {
             let conversionsAttr = ctx.getAttribute('data-conversions');
-            if (!conversionsAttr) {
-                console.warn('No data-conversions attribute found on monthly trends chart');
-                conversions = [0, 0, 0, 0, 0, 0];
-            } else {
-                // Try to parse it as JSON if it's a string
-                if (typeof conversionsAttr === 'string') {
-                    // Handle possible HTML-escaped JSON
-                    conversionsAttr = conversionsAttr.replace(/&quot;/g, '"')
-                                               .replace(/&#39;/g, "'")
-                                               .replace(/&lt;/g, '<')
-                                               .replace(/&gt;/g, '>');
-                    conversions = JSON.parse(conversionsAttr);
-                } else if (typeof conversionsAttr === 'object') {
-                    // If it's already an object, use it directly
-                    conversions = conversionsAttr;
-                } else {
-                    // Fallback to default data
-                    conversions = [0, 0, 0, 0, 0, 0];
+            if (conversionsAttr) {
+                // Unescape HTML entities first
+                conversionsAttr = conversionsAttr.replace(/&quot;/g, '"')
+                                           .replace(/&#39;/g, "'")
+                                           .replace(/&lt;/g, '<')
+                                           .replace(/&gt;/g, '>');
+                                   
+                // Try to parse JSON
+                if (conversionsAttr.trim().startsWith('[')) {
+                    const parsedData = JSON.parse(conversionsAttr);
+                    if (Array.isArray(parsedData)) {
+                        conversions = parsedData;
+                    }
                 }
             }
         } catch (e) {
             console.error('Failed to parse conversions data:', e);
-            conversions = [0, 0, 0, 0, 0, 0];
+            conversions = defaultConversions;
         }
         
         console.log('Monthly trends data:', { months, leads, conversions });
