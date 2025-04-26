@@ -6,11 +6,18 @@
 // Create toast notification global instance
 let toastNotification;
 
-// Initialize when document is ready
-jQueryReady(function() {
-    // Create and initialize the global instance
-    toastNotification = new ToastNotification();
-    toastNotification.init();
+// Helper function to initialize toast notification
+function initToastNotification() {
+    if (!toastNotification) {
+        toastNotification = new ToastNotification();
+        toastNotification.init();
+        console.log('Toast notification system initialized');
+    }
+}
+
+// Initialize when document is ready (direct approach, no helper function needed)
+$(document).ready(function() {
+    initToastNotification();
 });
 
 class ToastNotification {

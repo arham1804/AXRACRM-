@@ -3,8 +3,8 @@
  * Provides functionality to export table data to various formats
  */
 
-// Initialize when jQuery is ready
-jQueryReady(function() {
+// Helper function to initialize export functionality
+function initExportFunctionality() {
     // Listen for export button clicks
     $('.export-csv-btn').on('click', function(e) {
         e.preventDefault();
@@ -21,6 +21,11 @@ jQueryReady(function() {
             alert('PDF export is being implemented. Please use CSV export for now.');
         }
     });
+}
+
+// Initialize when document is ready
+$(document).ready(function() {
+    initExportFunctionality();
 });
 
 /**
@@ -135,4 +140,9 @@ function addExportDropdown(containerId, tableId, filename) {
     if (typeof feather !== 'undefined') {
         feather.replace();
     }
+    
+    // Immediately bind events for export buttons
+    initExportFunctionality();
+    
+    return true;
 }

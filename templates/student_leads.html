@@ -131,7 +131,7 @@
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/exportUtility.js') }}"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    $(document).ready(function() {
         // Initialize feather icons for dropdown menu items
         const dropdownFeathers = document.querySelectorAll('.dropdown-item .feather-sm');
         if (dropdownFeathers) {
