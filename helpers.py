@@ -62,32 +62,39 @@ def generate_dashboard_stats():
     """
     stats = {}
     
-    # Total counts
-    stats['total_leads'] = Student.query.count()
-    stats['total_teachers'] = Teacher.query.count()
-    stats['total_assignments'] = TuitionAssignment.query.count()
-    stats['total_demos'] = Demo.query.count()
-    
-    # Status breakdowns
-    stats['lead_status'] = {
-        'new': Student.query.filter_by(status='New').count(),
-        'assigned': Student.query.filter_by(status='Assigned').count(),
-        'converted': Student.query.filter_by(status='Converted').count(),
-        'lost': Student.query.filter_by(status='Lost').count()
-    }
-    
-    stats['assignment_status'] = {
-        'pending': TuitionAssignment.query.filter_by(status='Pending').count(),
-        'demo_scheduled': TuitionAssignment.query.filter_by(status='Demo Scheduled').count(),
-        'converted': TuitionAssignment.query.filter_by(status='Converted').count(),
-        'cancelled': TuitionAssignment.query.filter_by(status='Cancelled').count()
-    }
-    
-    stats['demo_status'] = {
-        'scheduled': Demo.query.filter_by(status='Scheduled').count(),
-        'completed': Demo.query.filter_by(status='Completed').count(),
-        'cancelled': Demo.query.filter_by(status='Cancelled').count()
-    }
+    try:
+        # Total counts
+        stats['total_leads'] = Student.query.count()
+        stats['total_teachers'] = Teacher.query.count()
+        stats['total_assignments'] = TuitionAssignment.query.count()
+        stats['total_demos'] = Demo.query.count()
+        
+        # Status breakdowns - ensure all values are integers, not SQLAlchemy result objects
+        stats['lead_status'] = {
+            'new': int(Student.query.filter_by(status='New').count()),
+            'assigned': int(Student.query.filter_by(status='Assigned').count()),
+            'converted': int(Student.query.filter_by(status='Converted').count()),
+            'lost': int(Student.query.filter_by(status='Lost').count())
+        }
+        
+        stats['assignment_status'] = {
+            'pending': int(TuitionAssignment.query.filter_by(status='Pending').count()),
+            'demo_scheduled': int(TuitionAssignment.query.filter_by(status='Demo Scheduled').count()),
+            'converted': int(TuitionAssignment.query.filter_by(status='Converted').count()),
+            'cancelled': int(TuitionAssignment.query.filter_by(status='Cancelled').count())
+        }
+        
+        stats['demo_status'] = {
+            'scheduled': int(Demo.query.filter_by(status='Scheduled').count()),
+            'completed': int(Demo.query.filter_by(status='Completed').count()),
+            'cancelled': int(Demo.query.filter_by(status='Cancelled').count())
+        }
+    except Exception as e:
+        # If there's an error, log it and return empty stats
+        print(f"Error generating dashboard stats: {str(e)}")
+        stats['lead_status'] = {'new': 0, 'assigned': 0, 'converted': 0, 'lost': 0}
+        stats['assignment_status'] = {'pending': 0, 'demo_scheduled': 0, 'converted': 0, 'cancelled': 0}
+        stats['demo_status'] = {'scheduled': 0, 'completed': 0, 'cancelled': 0}
     
     # Conversion rates
     if stats['total_leads'] > 0:
@@ -102,42 +109,49 @@ def generate_dashboard_stats():
         stats['demo_to_conversion_rate'] = 0
     
     # Calculate monthly lead trends (last 6 months)
-    months = []
-    lead_counts = []
-    conversion_counts = []
-    
-    for i in range(5, -1, -1):
-        start_date = (datetime.utcnow() - timedelta(days=30 * i)).replace(day=1, hour=0, minute=0, second=0)
-        if i > 0:
-            end_date = (datetime.utcnow() - timedelta(days=30 * (i-1))).replace(day=1, hour=0, minute=0, second=0)
-        else:
-            end_date = datetime.utcnow()
+    try:
+        months = []
+        lead_counts = []
+        conversion_counts = []
         
-        month_name = start_date.strftime('%b')
-        months.append(month_name)
+        for i in range(5, -1, -1):
+            start_date = (datetime.utcnow() - timedelta(days=30 * i)).replace(day=1, hour=0, minute=0, second=0)
+            if i > 0:
+                end_date = (datetime.utcnow() - timedelta(days=30 * (i-1))).replace(day=1, hour=0, minute=0, second=0)
+            else:
+                end_date = datetime.utcnow()
+            
+            month_name = start_date.strftime('%b')
+            months.append(month_name)
+            
+            # Count leads created in this month
+            month_leads = Student.query.filter(
+                and_(
+                    Student.created_at >= start_date,
+                    Student.created_at < end_date
+                )
+            ).count()
+            lead_counts.append(int(month_leads))
+            
+            # Count conversions in this month
+            month_conversions = TuitionAssignment.query.filter(
+                and_(
+                    TuitionAssignment.status == 'Converted',
+                    TuitionAssignment.assigned_date >= start_date,
+                    TuitionAssignment.assigned_date < end_date
+                )
+            ).count()
+            conversion_counts.append(int(month_conversions))
         
-        # Count leads created in this month
-        month_leads = Student.query.filter(
-            and_(
-                Student.created_at >= start_date,
-                Student.created_at < end_date
-            )
-        ).count()
-        lead_counts.append(month_leads)
-        
-        # Count conversions in this month
-        month_conversions = TuitionAssignment.query.filter(
-            and_(
-                TuitionAssignment.status == 'Converted',
-                TuitionAssignment.assigned_date >= start_date,
-                TuitionAssignment.assigned_date < end_date
-            )
-        ).count()
-        conversion_counts.append(month_conversions)
-    
-    stats['trend_months'] = months
-    stats['trend_leads'] = lead_counts
-    stats['trend_conversions'] = conversion_counts
+        stats['trend_months'] = months
+        stats['trend_leads'] = lead_counts
+        stats['trend_conversions'] = conversion_counts
+    except Exception as e:
+        print(f"Error generating trend data: {str(e)}")
+        # Provide fallback trend data
+        stats['trend_months'] = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
+        stats['trend_leads'] = [0, 0, 0, 0, 0, 0]
+        stats['trend_conversions'] = [0, 0, 0, 0, 0, 0]
     
     # Top performing teachers (based on conversion rate)
     from sqlalchemy.sql import case

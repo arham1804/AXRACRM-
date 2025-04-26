@@ -684,8 +684,42 @@ def reassign_teacher_for_demo(demo_id):
 @app.route('/api/dashboard/stats')
 @login_required
 def api_dashboard_stats():
-    stats = generate_dashboard_stats()
-    return jsonify(stats)
+    try:
+        stats = generate_dashboard_stats()
+        # Ensure all the data is JSON serializable
+        for key, value in stats.items():
+            if isinstance(value, dict):
+                # Ensure all dictionary values are JSON serializable
+                for inner_key, inner_value in value.items():
+                    if not isinstance(inner_value, (str, int, float, bool, type(None))):
+                        stats[key][inner_key] = str(inner_value)
+            elif isinstance(value, list):
+                # Ensure all list elements are JSON serializable
+                for i, item in enumerate(value):
+                    if isinstance(item, dict):
+                        for item_key, item_value in item.items():
+                            if not isinstance(item_value, (str, int, float, bool, type(None))):
+                                stats[key][i][item_key] = str(item_value)
+                    elif not isinstance(item, (str, int, float, bool, type(None))):
+                        stats[key][i] = str(item)
+            elif not isinstance(value, (str, int, float, bool, type(None))):
+                stats[key] = str(value)
+        
+        return jsonify(stats)
+    except Exception as e:
+        # Log the error and return a valid JSON response with error information
+        error_msg = f"Error in dashboard stats API: {str(e)}"
+        print(error_msg)
+        return jsonify({
+            'error': error_msg,
+            'status': 'error',
+            'lead_status': {'new': 0, 'assigned': 0, 'converted': 0, 'lost': 0},
+            'assignment_status': {'pending': 0, 'demo_scheduled': 0, 'converted': 0, 'cancelled': 0},
+            'demo_status': {'scheduled': 0, 'completed': 0, 'cancelled': 0},
+            'trend_months': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            'trend_leads': [0, 0, 0, 0, 0, 0],
+            'trend_conversions': [0, 0, 0, 0, 0, 0]
+        })
 
 # Communication Templates routes
 @app.route('/communication-templates')
