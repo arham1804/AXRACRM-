@@ -672,22 +672,46 @@ function showToast(message, type = 'success') {
 // Setup export buttons for dashboard tables
 function setupExportButtons() {
     try {
-        // Check if export utility is available
-        if (typeof addExportDropdown === 'function') {
-            // Add export dropdown to recent leads
-            addExportDropdown('recentLeadsExport', 'recentLeadsTable', 'recent_leads');
+        // Make sure addExportDropdown function exists
+        if (typeof addExportDropdown !== 'function') {
+            console.warn('Export utility function not available');
             
-            // Add export dropdown to recent demos
-            addExportDropdown('recentDemosExport', 'recentDemosTable', 'recent_demos');
+            // Attempt to load the export utility script if needed
+            if (typeof window.exportUtilityLoaded === 'undefined') {
+                const script = document.createElement('script');
+                script.src = '/static/js/exportUtility.js';
+                script.onload = function() {
+                    console.log('Export utility loaded dynamically');
+                    window.exportUtilityLoaded = true;
+                    
+                    // Try again after script is loaded
+                    setTimeout(setupExportButtons, 500);
+                };
+                document.head.appendChild(script);
+            }
+            return;
+        }
+        
+        // Wait a bit to ensure DOM is ready
+        setTimeout(() => {
+            // Recent leads export
+            if (document.getElementById('recentLeadsExport') && document.getElementById('recentLeadsTable')) {
+                addExportDropdown('recentLeadsExport', 'recentLeadsTable', 'recent_leads');
+            }
             
-            // Add export dropdown to top teachers
-            addExportDropdown('topTeachersExport', 'topTeachersTable', 'top_teachers');
+            // Recent demos export
+            if (document.getElementById('recentDemosExport') && document.getElementById('recentDemosTable')) {
+                addExportDropdown('recentDemosExport', 'recentDemosTable', 'recent_demos');
+            }
+            
+            // Top teachers export
+            if (document.getElementById('topTeachersExport') && document.getElementById('topTeachersTable')) {
+                addExportDropdown('topTeachersExport', 'topTeachersTable', 'top_teachers');
+            }
             
             console.log('Dashboard export buttons initialized');
-        } else {
-            console.warn('Export utility not available');
-        }
+        }, 500); // Short delay to ensure DOM is ready
     } catch (error) {
-        console.error('Error setting up export buttons:', error);
+        console.warn('Error setting up export buttons:', error);
     }
 }
