@@ -297,7 +297,10 @@
 {% endblock %}
 
 {% block scripts %}
-<!-- Chart.js library first -->
+<!-- Export utility script first -->
+<script src="{{ url_for('static', filename='js/exportUtility.js') }}"></script>
+
+<!-- Chart.js library -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 
 <!-- Dashboard scripts -->
@@ -306,6 +309,42 @@
 <!-- Initialize charts after DOM is fully loaded -->
 <script>
     $(document).ready(function() {
+        // Create a utility loader function to ensure all scripts are loaded
+        function loadUtilities() {
+            const promises = [];
+            
+            // Check if Chart.js is loaded, otherwise load it
+            if (typeof Chart === 'undefined') {
+                promises.push(
+                    $.getScript("https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js")
+                );
+            }
+            
+            // Check if export utility is loaded, otherwise load it
+            if (typeof addExportDropdown === 'undefined') {
+                promises.push(
+                    $.getScript("{{ url_for('static', filename='js/exportUtility.js') }}")
+                );
+            }
+            
+            // Wait for all script loading promises to complete
+            $.when.apply($, promises).then(function() {
+                console.log('All utility scripts loaded successfully');
+                
+                // Now initialize the dashboard
+                if (typeof initializePage === 'function') {
+                    if (!window.dashboardInitialized) {
+                        window.dashboardInitialized = true;
+                        initializePage();
+                    }
+                } else {
+                    console.error('initializePage function not found');
+                }
+            }).catch(function(error) {
+                console.error('Error loading utility scripts:', error);
+            });
+        }
+        
         // Make sure Chart.js is loaded before initializing
         if (typeof Chart !== 'undefined') {
             console.log('Chart.js is loaded, initializing charts...');
@@ -322,9 +361,12 @@
                 }
             } catch (error) {
                 console.error('Error initializing dashboard charts:', error);
+                // Try to reload utilities
+                loadUtilities();
             }
         } else {
-            console.error('Chart.js library not loaded!');
+            console.error('Chart.js library not loaded, attempting to load it now...');
+            loadUtilities();
         }
     });
 </script>
