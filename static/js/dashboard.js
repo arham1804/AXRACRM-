@@ -41,18 +41,41 @@ function initLeadStatusChart() {
             return;
         }
         
-        const statsAttr = ctx.getAttribute('data-stats');
-        if (!statsAttr) {
-            console.warn('No data-stats attribute found on lead status chart');
-            return;
-        }
-        
-        // Safely parse JSON data
+        // Get data from the canvas element
         let leadData;
         try {
-            leadData = JSON.parse(statsAttr);
+            // Try to get the data attribute directly
+            let statsAttr = ctx.getAttribute('data-stats');
+            
+            // Check if statsAttr is falsy
+            if (!statsAttr) {
+                console.warn('No data-stats attribute found on lead status chart');
+                leadData = { new: 0, assigned: 0, converted: 0, lost: 0 };
+            } else {
+                // Try to parse it as JSON if it's a string
+                if (typeof statsAttr === 'string') {
+                    // If it starts with a { assume it's JSON
+                    if (statsAttr.trim().startsWith('{')) {
+                        leadData = JSON.parse(statsAttr);
+                    } else {
+                        // Handle possible HTML-escaped JSON
+                        statsAttr = statsAttr.replace(/&quot;/g, '"')
+                                           .replace(/&#39;/g, "'")
+                                           .replace(/&lt;/g, '<')
+                                           .replace(/&gt;/g, '>');
+                        leadData = JSON.parse(statsAttr);
+                    }
+                } else if (typeof statsAttr === 'object') {
+                    // If it's already an object, use it directly
+                    leadData = statsAttr;
+                } else {
+                    // Fallback to default data
+                    leadData = { new: 0, assigned: 0, converted: 0, lost: 0 };
+                }
+            }
         } catch (e) {
-            console.error('Failed to parse lead status data:', e, statsAttr);
+            console.error('Failed to parse lead status data:', e);
+            // Fallback to default data if parsing fails
             leadData = { new: 0, assigned: 0, converted: 0, lost: 0 };
         }
         
@@ -111,18 +134,41 @@ function initAssignmentStatusChart() {
             return;
         }
         
-        const statsAttr = ctx.getAttribute('data-stats');
-        if (!statsAttr) {
-            console.warn('No data-stats attribute found on assignment status chart');
-            return;
-        }
-        
-        // Safely parse JSON data
+        // Get data from the canvas element
         let assignmentData;
         try {
-            assignmentData = JSON.parse(statsAttr);
+            // Try to get the data attribute directly
+            let statsAttr = ctx.getAttribute('data-stats');
+            
+            // Check if statsAttr is falsy
+            if (!statsAttr) {
+                console.warn('No data-stats attribute found on assignment status chart');
+                assignmentData = { pending: 0, demo_scheduled: 0, converted: 0, cancelled: 0 };
+            } else {
+                // Try to parse it as JSON if it's a string
+                if (typeof statsAttr === 'string') {
+                    // If it starts with a { assume it's JSON
+                    if (statsAttr.trim().startsWith('{')) {
+                        assignmentData = JSON.parse(statsAttr);
+                    } else {
+                        // Handle possible HTML-escaped JSON
+                        statsAttr = statsAttr.replace(/&quot;/g, '"')
+                                           .replace(/&#39;/g, "'")
+                                           .replace(/&lt;/g, '<')
+                                           .replace(/&gt;/g, '>');
+                        assignmentData = JSON.parse(statsAttr);
+                    }
+                } else if (typeof statsAttr === 'object') {
+                    // If it's already an object, use it directly
+                    assignmentData = statsAttr;
+                } else {
+                    // Fallback to default data
+                    assignmentData = { pending: 0, demo_scheduled: 0, converted: 0, cancelled: 0 };
+                }
+            }
         } catch (e) {
-            console.error('Failed to parse assignment status data:', e, statsAttr);
+            console.error('Failed to parse assignment status data:', e);
+            // Fallback to default data if parsing fails
             assignmentData = { pending: 0, demo_scheduled: 0, converted: 0, cancelled: 0 };
         }
         
@@ -181,18 +227,41 @@ function initDemoStatusChart() {
             return;
         }
         
-        const statsAttr = ctx.getAttribute('data-stats');
-        if (!statsAttr) {
-            console.warn('No data-stats attribute found on demo status chart');
-            return;
-        }
-        
-        // Safely parse JSON data
+        // Get data from the canvas element
         let demoData;
         try {
-            demoData = JSON.parse(statsAttr);
+            // Try to get the data attribute directly
+            let statsAttr = ctx.getAttribute('data-stats');
+            
+            // Check if statsAttr is falsy
+            if (!statsAttr) {
+                console.warn('No data-stats attribute found on demo status chart');
+                demoData = { scheduled: 0, completed: 0, cancelled: 0 };
+            } else {
+                // Try to parse it as JSON if it's a string
+                if (typeof statsAttr === 'string') {
+                    // If it starts with a { assume it's JSON
+                    if (statsAttr.trim().startsWith('{')) {
+                        demoData = JSON.parse(statsAttr);
+                    } else {
+                        // Handle possible HTML-escaped JSON
+                        statsAttr = statsAttr.replace(/&quot;/g, '"')
+                                           .replace(/&#39;/g, "'")
+                                           .replace(/&lt;/g, '<')
+                                           .replace(/&gt;/g, '>');
+                        demoData = JSON.parse(statsAttr);
+                    }
+                } else if (typeof statsAttr === 'object') {
+                    // If it's already an object, use it directly
+                    demoData = statsAttr;
+                } else {
+                    // Fallback to default data
+                    demoData = { scheduled: 0, completed: 0, cancelled: 0 };
+                }
+            }
         } catch (e) {
-            console.error('Failed to parse demo status data:', e, statsAttr);
+            console.error('Failed to parse demo status data:', e);
+            // Fallback to default data if parsing fails
             demoData = { scheduled: 0, completed: 0, cancelled: 0 };
         }
         
@@ -252,12 +321,27 @@ function initMonthlyTrendsChart() {
         // Safely parse months data
         let months;
         try {
-            const monthsAttr = ctx.getAttribute('data-months');
+            let monthsAttr = ctx.getAttribute('data-months');
             if (!monthsAttr) {
                 console.warn('No data-months attribute found on monthly trends chart');
-                return;
+                months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+            } else {
+                // Try to parse it as JSON if it's a string
+                if (typeof monthsAttr === 'string') {
+                    // Handle possible HTML-escaped JSON
+                    monthsAttr = monthsAttr.replace(/&quot;/g, '"')
+                                       .replace(/&#39;/g, "'")
+                                       .replace(/&lt;/g, '<')
+                                       .replace(/&gt;/g, '>');
+                    months = JSON.parse(monthsAttr);
+                } else if (typeof monthsAttr === 'object') {
+                    // If it's already an object, use it directly
+                    months = monthsAttr;
+                } else {
+                    // Fallback to default data
+                    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+                }
             }
-            months = JSON.parse(monthsAttr);
         } catch (e) {
             console.error('Failed to parse months data:', e);
             months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
@@ -266,12 +350,27 @@ function initMonthlyTrendsChart() {
         // Safely parse leads data
         let leads;
         try {
-            const leadsAttr = ctx.getAttribute('data-leads');
+            let leadsAttr = ctx.getAttribute('data-leads');
             if (!leadsAttr) {
                 console.warn('No data-leads attribute found on monthly trends chart');
-                return;
+                leads = [0, 0, 0, 0, 0, 0];
+            } else {
+                // Try to parse it as JSON if it's a string
+                if (typeof leadsAttr === 'string') {
+                    // Handle possible HTML-escaped JSON
+                    leadsAttr = leadsAttr.replace(/&quot;/g, '"')
+                                     .replace(/&#39;/g, "'")
+                                     .replace(/&lt;/g, '<')
+                                     .replace(/&gt;/g, '>');
+                    leads = JSON.parse(leadsAttr);
+                } else if (typeof leadsAttr === 'object') {
+                    // If it's already an object, use it directly
+                    leads = leadsAttr;
+                } else {
+                    // Fallback to default data
+                    leads = [0, 0, 0, 0, 0, 0];
+                }
             }
-            leads = JSON.parse(leadsAttr);
         } catch (e) {
             console.error('Failed to parse leads data:', e);
             leads = [0, 0, 0, 0, 0, 0];
@@ -280,12 +379,27 @@ function initMonthlyTrendsChart() {
         // Safely parse conversions data
         let conversions;
         try {
-            const conversionsAttr = ctx.getAttribute('data-conversions');
+            let conversionsAttr = ctx.getAttribute('data-conversions');
             if (!conversionsAttr) {
                 console.warn('No data-conversions attribute found on monthly trends chart');
-                return;
+                conversions = [0, 0, 0, 0, 0, 0];
+            } else {
+                // Try to parse it as JSON if it's a string
+                if (typeof conversionsAttr === 'string') {
+                    // Handle possible HTML-escaped JSON
+                    conversionsAttr = conversionsAttr.replace(/&quot;/g, '"')
+                                               .replace(/&#39;/g, "'")
+                                               .replace(/&lt;/g, '<')
+                                               .replace(/&gt;/g, '>');
+                    conversions = JSON.parse(conversionsAttr);
+                } else if (typeof conversionsAttr === 'object') {
+                    // If it's already an object, use it directly
+                    conversions = conversionsAttr;
+                } else {
+                    // Fallback to default data
+                    conversions = [0, 0, 0, 0, 0, 0];
+                }
             }
-            conversions = JSON.parse(conversionsAttr);
         } catch (e) {
             console.error('Failed to parse conversions data:', e);
             conversions = [0, 0, 0, 0, 0, 0];
