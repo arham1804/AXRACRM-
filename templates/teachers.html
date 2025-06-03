@@ -6,30 +6,56 @@
     <div class="d-flex justify-content-between align-items-center mb-4 page-header">
         <h1 class="h2">Teachers</h1>
         <div class="d-flex">
-            <a href="#" class="btn btn-success me-2" id="exportBtn">
-                <i data-feather="download" class="me-1"></i> Export Data
+            <a href="#" class="btn btn-success me-2" id="exportBtn" title="Export teachers data">
+                <i data-feather="download" class="me-1"></i> Export Teachers
             </a>
-            <a href="{{ url_for('new_teacher') }}" class="btn btn-primary">
+            <a href="{{ url_for('new_teacher') }}" class="btn btn-primary me-2" title="Add a new teacher">
                 <i data-feather="plus" class="me-1"></i> Add New Teacher
+            </a>
+            <a href="{{ url_for('bulk_upload_teacher') }}" class="btn btn-warning" title="Upload teachers in bulk">
+                <i data-feather="upload" class="me-1"></i> Bulk Upload Teachers
             </a>
         </div>
     </div>
     
-    <!-- Status filter -->
+    <!-- Search and Status filter -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-light">
-                    <h5 class="card-title mb-0">Filter by Status</h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex flex-wrap gap-2">
-                        <a href="{{ url_for('teachers') }}" class="btn btn-sm {% if current_filter == '' %}btn-primary{% else %}btn-outline-primary{% endif %}">All</a>
-                        <a href="{{ url_for('teachers', status='Active') }}" class="btn btn-sm {% if current_filter == 'Active' %}btn-success{% else %}btn-outline-success{% endif %}">Active</a>
-                        <a href="{{ url_for('teachers', status='Inactive') }}" class="btn btn-sm {% if current_filter == 'Inactive' %}btn-danger{% else %}btn-outline-danger{% endif %}">Inactive</a>
+            <form method="GET" action="{{ url_for('teachers') }}">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">Search and Filter Teachers</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3 align-items-center">
+                            <div class="col-md-3">
+                                <label for="name" class="form-label">Name</label>
+                                <input type="text" id="name" name="name" class="form-control" placeholder="Teacher name" value="{{ name_filter or '' }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="location" class="form-label">Location</label>
+                                <input type="text" id="location" name="location" class="form-control" placeholder="Location" value="{{ location_filter or '' }}">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="pincode" class="form-label">Pincode</label>
+                                <input type="text" id="pincode" name="pincode" class="form-control" placeholder="Pincode" value="{{ pincode_filter or '' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label d-block">Status</label>
+                                <div class="btn-group" role="group" aria-label="Status filter">
+                                    <a href="{{ url_for('teachers', name=name_filter, location=location_filter, pincode=pincode_filter) }}" class="btn btn-sm {% if current_filter == '' %}btn-primary{% else %}btn-outline-primary{% endif %}">All</a>
+                                    <a href="{{ url_for('teachers', status='Active', name=name_filter, location=location_filter, pincode=pincode_filter) }}" class="btn btn-sm {% if current_filter == 'Active' %}btn-success{% else %}btn-outline-success{% endif %}">Active</a>
+                                    <a href="{{ url_for('teachers', status='Inactive', name=name_filter, location=location_filter, pincode=pincode_filter) }}" class="btn btn-sm {% if current_filter == 'Inactive' %}btn-danger{% else %}btn-outline-danger{% endif %}">Inactive</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-primary">Search</button>
+                            <a href="{{ url_for('teachers') }}" class="btn btn-secondary ms-2">Reset</a>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
     
@@ -61,8 +87,30 @@
                                     <tr>
                                         <td>{{ teacher.teacher_id }}</td>
                                         <td>{{ teacher.name }}</td>
-                                        <td>{{ teacher.phone }}</td>
-                                        <td>{{ teacher.alternate_phone or '-' }}</td>
+                                        <td>
+                                            {{ teacher.phone }}
+                                            <a href="tel:{{ teacher.phone }}" class="btn btn-sm btn-outline-primary ms-2" title="Call {{ teacher.name }}">
+                                                <i data-feather="phone" aria-hidden="true"></i>
+                                                <span class="visually-hidden">Call</span>
+                                            </a>
+                                            <a href="https://wa.me/{{ teacher.phone | replace(' ', '') }}" target="_blank" class="btn btn-sm btn-outline-success ms-1" title="WhatsApp {{ teacher.name }}">
+                                                <i data-feather="message-circle" aria-hidden="true"></i>
+                                                <span class="visually-hidden">WhatsApp</span>
+                                            </a>
+                                        </td>
+                                        <td>
+                                            {{ teacher.alternate_phone or '-' }}
+                                            {% if teacher.alternate_phone %}
+                                            <a href="tel:{{ teacher.alternate_phone }}" class="btn btn-sm btn-outline-primary ms-2" title="Call {{ teacher.name }} Alternate Phone">
+                                                <i data-feather="phone" aria-hidden="true"></i>
+                                                <span class="visually-hidden">Call</span>
+                                            </a>
+                                            <a href="https://wa.me/{{ teacher.alternate_phone | replace(' ', '') }}" target="_blank" class="btn btn-sm btn-outline-success ms-1" title="WhatsApp {{ teacher.name }} Alternate Phone">
+                                                <i data-feather="message-circle" aria-hidden="true"></i>
+                                                <span class="visually-hidden">WhatsApp</span>
+                                            </a>
+                                            {% endif %}
+                                        </td>
                                         <td>{{ teacher.gender }}</td>
                                         <td>
                                             {% set areas = teacher.get_preferred_areas_list() %}

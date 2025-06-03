@@ -3,8 +3,10 @@ from sqlalchemy import func, and_
 from app import db
 import json
 from datetime import datetime, timedelta
+import logging
+from typing import List, Dict, Any
 
-def calculate_match_score(student, teacher):
+def calculate_match_score(student: Student, teacher: Teacher) -> int:
     """
     Calculate a match score between a student lead and a teacher
     Returns a percentage (0-100) indicating how good the match is
@@ -56,7 +58,7 @@ def calculate_match_score(student, teacher):
     
     return score
 
-def generate_dashboard_stats():
+def generate_dashboard_stats() -> Dict[str, Any]:
     """
     Generate statistics for the admin dashboard
     """
@@ -91,7 +93,7 @@ def generate_dashboard_stats():
         }
     except Exception as e:
         # If there's an error, log it and return empty stats
-        print(f"Error generating dashboard stats: {str(e)}")
+        logging.error(f"Error generating dashboard stats: {str(e)}")
         stats['lead_status'] = {'new': 0, 'assigned': 0, 'converted': 0, 'lost': 0}
         stats['assignment_status'] = {'pending': 0, 'demo_scheduled': 0, 'converted': 0, 'cancelled': 0}
         stats['demo_status'] = {'scheduled': 0, 'completed': 0, 'cancelled': 0}
@@ -110,16 +112,18 @@ def generate_dashboard_stats():
     
     # Calculate monthly lead trends (last 6 months)
     try:
+        from calendar import monthrange
         months = []
         lead_counts = []
         conversion_counts = []
+        now = datetime.utcnow()
         
         for i in range(5, -1, -1):
-            start_date = (datetime.utcnow() - timedelta(days=30 * i)).replace(day=1, hour=0, minute=0, second=0)
-            if i > 0:
-                end_date = (datetime.utcnow() - timedelta(days=30 * (i-1))).replace(day=1, hour=0, minute=0, second=0)
-            else:
-                end_date = datetime.utcnow()
+            year = (now.year if now.month - i > 0 else now.year - 1)
+            month = (now.month - i) % 12 or 12
+            start_date = datetime(year, month, 1)
+            last_day = monthrange(year, month)[1]
+            end_date = datetime(year, month, last_day, 23, 59, 59)
             
             month_name = start_date.strftime('%b')
             months.append(month_name)
@@ -128,7 +132,7 @@ def generate_dashboard_stats():
             month_leads = Student.query.filter(
                 and_(
                     Student.created_at >= start_date,
-                    Student.created_at < end_date
+                    Student.created_at <= end_date
                 )
             ).count()
             lead_counts.append(int(month_leads))
@@ -138,7 +142,7 @@ def generate_dashboard_stats():
                 and_(
                     TuitionAssignment.status == 'Converted',
                     TuitionAssignment.assigned_date >= start_date,
-                    TuitionAssignment.assigned_date < end_date
+                    TuitionAssignment.assigned_date <= end_date
                 )
             ).count()
             conversion_counts.append(int(month_conversions))
@@ -147,7 +151,7 @@ def generate_dashboard_stats():
         stats['trend_leads'] = lead_counts
         stats['trend_conversions'] = conversion_counts
     except Exception as e:
-        print(f"Error generating trend data: {str(e)}")
+        logging.error(f"Error generating trend data: {str(e)}")
         # Provide fallback trend data
         stats['trend_months'] = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
         stats['trend_leads'] = [0, 0, 0, 0, 0, 0]
@@ -193,13 +197,39 @@ def generate_dashboard_stats():
         'created_at': lead.created_at.strftime('%Y-%m-%d'),
         'status': lead.status
     } for lead in recent_leads]
-    
-    return stats
 
-# Helper function for SQL case statements
-def case(whens, else_=None):
-    """Helper for building case statements in SQL"""
-    from sqlalchemy.sql import case
-    # In newer SQLAlchemy versions, case() expects individual tuples, not a list of tuples
-    whens_list = list(whens)  # Convert to list to ensure it's iterable
-    return case(*whens_list, else_=else_)
+    # New stats for Axra Funnel and Service Overview
+
+    # Call to lead rate - no call data available, set to 0
+    stats['call_to_lead_rate'] = 0
+
+    # Conversion to payment rate - total payments / conversions
+    total_conversions = TuitionAssignment.query.filter_by(status='Converted').count()
+    total_payments = db.session.query(func.sum(Student.fee)).filter(Student.status == 'Converted').scalar() or 0.0
+    if total_conversions > 0:
+        stats['conversion_to_payment_rate'] = round((total_payments / total_conversions), 2)
+    else:
+        stats['conversion_to_payment_rate'] = 0.0
+
+    # Sales overview and total sale (sum of fees for converted students)
+    stats['sales_overview'] = total_payments
+    stats['total_sale'] = total_payments
+
+    # Demo conversion average time (average time from demo scheduled to demo completed)
+    demo_times = db.session.query(
+        func.avg(func.julianday(Demo.created_at) - func.julianday(Demo.scheduled_date))
+    ).filter(Demo.status == 'Completed').scalar()
+    if demo_times is not None:
+        # Convert days to hours
+        stats['demo_conversion_avg_time'] = round(demo_times * 24, 2)
+    else:
+        stats['demo_conversion_avg_time'] = 0.0
+
+    # Average fees per conversion
+    if total_conversions > 0:
+        avg_fee = total_payments / total_conversions
+        stats['avg_fees_per_conversion'] = round(avg_fee, 2)
+    else:
+        stats['avg_fees_per_conversion'] = 0.0
+
+    return stats

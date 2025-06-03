@@ -1,8 +1,8 @@
 from app import app, db
-from flask import render_template, redirect, url_for, flash, request, jsonify
+from flask import render_template, redirect, url_for, flash, request, jsonify, send_file
 from forms import (LoginForm, StudentLeadForm, TeacherForm, AssignTeacherForm, 
                    ScheduleDemoForm, FeedbackForm, ReassignTeacherForm, 
-                   CommunicationTemplateForm, SendCommunicationForm)
+                   CommunicationTemplateForm, SendCommunicationForm, TeacherBulkUploadForm)
 from models import (Admin, Student, Teacher, TuitionAssignment, 
                    Demo, Feedback, Notification, CommunicationTemplate, Communication)
 from flask_login import login_user, logout_user, login_required, current_user
@@ -12,6 +12,8 @@ from datetime import datetime, timedelta
 from email_service import send_demo_reminder, send_teacher_demo_notification
 import json
 import logging
+import io
+import csv
 
 # Add context processor to make datetime available in all templates
 @app.context_processor
@@ -49,6 +51,64 @@ def dashboard():
     stats = generate_dashboard_stats()
     return render_template('dashboard.html', title='Dashboard', stats=stats)
 
+@app.route('/admin/weekly-summary-report')
+@login_required
+def weekly_summary_report():
+    # Only allow admin users (assuming Admin model and current_user)
+    if not hasattr(current_user, 'id'):
+        flash('Unauthorized access', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    from datetime import datetime, timedelta
+    import csv
+    import io
+
+    # Calculate date range for last 7 days
+    end_date = datetime.utcnow()
+    start_date = end_date - timedelta(days=7)
+
+    # New leads in last 7 days
+    new_leads_count = Student.query.filter(Student.created_at >= start_date).count()
+
+    # Sessions completed in last 7 days
+    sessions_completed_count = Demo.query.filter(
+        Demo.status == 'Completed',
+        Demo.created_at >= start_date
+    ).count()
+
+    # Revenue collected in last 7 days (sum of fees for students converted in last 7 days)
+    revenue_collected = db.session.query(db.func.sum(Student.fee)).filter(
+        Student.status == 'Converted',
+        Student.created_at >= start_date
+    ).scalar() or 0.0
+
+    # Pending dues (sum of fees for students not converted or lost)
+    pending_dues = db.session.query(db.func.sum(Student.fee)).filter(
+        Student.status.in_(['New', 'Assigned'])
+    ).scalar() or 0.0
+
+    # Create CSV in memory
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # Write header
+    writer.writerow(['Metric', 'Value'])
+
+    # Write data rows
+    writer.writerow(['New Leads (Last 7 Days)', new_leads_count])
+    writer.writerow(['Sessions Completed (Last 7 Days)', sessions_completed_count])
+    writer.writerow(['Revenue Collected (Last 7 Days)', f"{revenue_collected:.2f}"])
+    writer.writerow(['Pending Dues', f"{pending_dues:.2f}"])
+
+    output.seek(0)
+
+    return send_file(
+        io.BytesIO(output.getvalue().encode()),
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name='weekly_summary_report.csv'
+    )
+
 # Student Lead routes
 @app.route('/student-leads')
 @login_required
@@ -82,12 +142,21 @@ def new_student_lead():
         db.session.commit()
         
         # Create notification for new lead
-        Notification.create_notification(
+        notification = Notification.create_notification(
             title="New Student Lead Added",
             message=f"New student lead '{student.name}' has been added. Please assign a teacher soon.",
             notification_type="new_lead",
             related_id=student.id
         )
+        from app import socketio
+        socketio.emit('new_notification', {
+            'id': notification.id,
+            'title': notification.title,
+            'message': notification.message,
+            'type': notification.notification_type,
+            'is_urgent': notification.is_urgent,
+            'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M') if notification.created_at else ''
+        })
         
         flash('Student lead added successfully!', 'success')
         return redirect(url_for('student_leads'))
@@ -144,11 +213,124 @@ def delete_student_lead(lead_id):
 @login_required
 def teachers():
     status_filter = request.args.get('status', '')
+    name_filter = request.args.get('name', '').strip()
+    location_filter = request.args.get('location', '').strip()
+    pincode_filter = request.args.get('pincode', '').strip()
+
+    query = Teacher.query
+
     if status_filter:
-        teachers = Teacher.query.filter_by(status=status_filter).order_by(Teacher.created_at.desc()).all()
-    else:
-        teachers = Teacher.query.order_by(Teacher.created_at.desc()).all()
-    return render_template('teachers.html', title='Teachers', teachers=teachers, current_filter=status_filter)
+        query = query.filter_by(status=status_filter)
+
+    if name_filter:
+        query = query.filter(Teacher.name.ilike(f'%{name_filter}%'))
+
+    if location_filter:
+        # Assuming preferred_areas is stored as JSON string, filter by substring match
+        query = query.filter(Teacher.preferred_areas.ilike(f'%{location_filter}%'))
+
+    if pincode_filter:
+        query = query.filter(Teacher.pincode.ilike(f'%{pincode_filter}%'))
+
+    teachers = query.order_by(Teacher.created_at.desc()).all()
+
+    return render_template('teachers.html', title='Teachers', teachers=teachers, current_filter=status_filter,
+                           name_filter=name_filter, location_filter=location_filter, pincode_filter=pincode_filter)
+
+@app.route('/teacher/bulk-upload', methods=['GET', 'POST'])
+@login_required
+def bulk_upload_teacher():
+    form = TeacherBulkUploadForm()
+    if form.validate_on_submit():
+        file = form.file.data
+        import io
+        import csv
+        import pandas as pd
+        from werkzeug.utils import secure_filename
+        
+        filename = secure_filename(file.filename)
+        try:
+            # Read file content into pandas DataFrame
+            if filename.endswith('.csv'):
+                stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
+                df = pd.read_csv(stream)
+            elif filename.endswith('.xls') or filename.endswith('.xlsx'):
+                df = pd.read_excel(file)
+            else:
+                flash('Unsupported file format. Please upload CSV or Excel file.', 'danger')
+                return redirect(url_for('bulk_upload_teacher'))
+            
+            # Expected columns in the file
+            expected_columns = ['name', 'phone', 'alternate_phone', 'preferred_areas', 'preferred_subjects', 'gender', 'pincode', 'qualification', 'stream', 'board', 'teaching_experience', 'teaching_experience_details']
+            missing_columns = [col for col in expected_columns if col not in df.columns]
+            if missing_columns:
+                flash(f'Missing columns in the uploaded file: {", ".join(missing_columns)}', 'danger')
+                return redirect(url_for('bulk_upload_teacher'))
+            
+            # Process each row and add teacher with validation and error collection
+            added_count = 0
+            errors = []
+            for index, row in df.iterrows():
+                row_num = index + 2  # considering header row as 1
+                try:
+                    # Basic validation for required fields
+                    if pd.isna(row['name']) or pd.isna(row['phone']) or pd.isna(row['gender']):
+                        errors.append(f"Row {row_num}: Missing required fields (name, phone, or gender).")
+                        continue
+                    
+                    areas = [area.strip() for area in str(row['preferred_areas']).splitlines() if area.strip()]
+                    preferred_areas_json = json.dumps(areas)
+                    preferred_subjects_json = json.dumps(row['preferred_subjects'].split(',') if pd.notna(row['preferred_subjects']) else [])
+                    teaching_experience = int(row['teaching_experience']) if pd.notna(row['teaching_experience']) else None
+                    
+                    teacher = Teacher(
+                        name=row['name'],
+                        phone=str(row['phone']),
+                        alternate_phone=str(row['alternate_phone']) if pd.notna(row['alternate_phone']) else None,
+                        preferred_areas=preferred_areas_json,
+                        preferred_subjects=preferred_subjects_json,
+                        gender=row['gender'],
+                        pincode=str(row['pincode']),
+                        qualification=row['qualification'],
+                        stream=row['stream'],
+                        board=row['board'],
+                        teaching_experience=teaching_experience,
+                        teaching_experience_details=row['teaching_experience_details'] if pd.notna(row['teaching_experience_details']) else None
+                    )
+                    db.session.add(teacher)
+                    added_count += 1
+                except Exception as e:
+                    error_msg = f"Row {row_num}: Error adding teacher - {str(e)}"
+                    app.logger.error(error_msg)
+                    errors.append(error_msg)
+                    continue
+            
+            db.session.commit()
+            flash(f'Successfully added {added_count} teachers!', 'success')
+            if errors:
+                flash('Some rows could not be added:', 'warning')
+                for error in errors:
+                    flash(error, 'danger')
+            return redirect(url_for('teachers'))
+        except Exception as e:
+            app.logger.error(f"Error processing uploaded file: {str(e)}")
+            flash('An error occurred while processing the file. Please check the file and try again.', 'danger')
+            return redirect(url_for('bulk_upload_teacher'))
+    
+    return render_template('teacher_bulk_upload.html', title='Bulk Upload Teachers', form=form)
+
+@app.route('/teacher/bulk-upload/template')
+@login_required
+def download_teacher_template():
+    # Create a sample CSV template in memory
+    output = io.StringIO()
+    writer = csv.writer(output)
+    # Write header row
+    writer.writerow(['name', 'phone', 'alternate_phone', 'preferred_areas', 'preferred_subjects', 'gender', 'pincode', 'qualification', 'stream', 'board', 'teaching_experience', 'teaching_experience_details'])
+    # Write example row
+    writer.writerow(['John Doe', '1234567890', '0987654321', 'Area1\nArea2\nArea3\nArea4\nArea5', 'Mathematics,Science', 'MALE', '123456', 'MSc', 'Science', 'CBSE', '5', '5 years teaching experience'])
+    output.seek(0)
+    return send_file(io.BytesIO(output.getvalue().encode()), mimetype='text/csv', as_attachment=True, download_name='teacher_bulk_upload_template.csv')
 
 @app.route('/teacher/new', methods=['GET', 'POST'])
 @login_required
@@ -299,12 +481,21 @@ def assign_teacher(lead_id):
         db.session.commit()
         
         # Create notification for teacher assignment
-        Notification.create_notification(
+        notification = Notification.create_notification(
             title=f"Teacher Assigned to {student.name}",
             message=f"Teacher {teacher.name} has been assigned to student {student.name}. Please schedule a demo soon.",
             notification_type="assignment",
             related_id=assignment.id
         )
+        from app import socketio
+        socketio.emit('new_notification', {
+            'id': notification.id,
+            'title': notification.title,
+            'message': notification.message,
+            'type': notification.notification_type,
+            'is_urgent': notification.is_urgent,
+            'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M') if notification.created_at else ''
+        })
         
         flash('Teacher assigned successfully!', 'success')
         return redirect(url_for('assignments'))
@@ -336,12 +527,21 @@ def schedule_demo(assignment_id):
         teacher_name = assignment.teacher.name
         scheduled_time = form.scheduled_date.data.strftime("%Y-%m-%d %H:%M")
         
-        Notification.create_notification(
+        notification = Notification.create_notification(
             title=f"Demo Scheduled: {student_name} with {teacher_name}",
             message=f"A demo has been scheduled for student {student_name} with teacher {teacher_name} on {scheduled_time}.",
             notification_type="demo_scheduled",
             related_id=demo.id
         )
+        from app import socketio
+        socketio.emit('new_notification', {
+            'id': notification.id,
+            'title': notification.title,
+            'message': notification.message,
+            'type': notification.notification_type,
+            'is_urgent': notification.is_urgent,
+            'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M') if notification.created_at else ''
+        })
         
         flash('Demo scheduled successfully!', 'success')
         return redirect(url_for('demo_tracking'))
@@ -367,10 +567,10 @@ def send_reminder(demo_id):
     if request.method == 'POST':
         notes = request.form.get('reminder_notes', '')
         
-        # Get details for the email record
-        student_name = demo.assignment.student.name
-        teacher_name = demo.assignment.teacher.name
-        scheduled_date = demo.scheduled_date.strftime("%Y-%m-%d %H:%M")
+        # Get details for the email record safely
+        student_name = demo.assignment.student.name if demo.assignment and demo.assignment.student else 'Unknown Student'
+        teacher_name = demo.assignment.teacher.name if demo.assignment and demo.assignment.teacher else 'Unknown Teacher'
+        scheduled_date = demo.scheduled_date.strftime("%Y-%m-%d %H:%M") if demo.scheduled_date else 'Unknown Date'
         
         # Create a record of the email (without actually sending it)
         # This allows the system to work without requiring an API key
@@ -404,12 +604,21 @@ def mark_demo_completed(demo_id):
     teacher_name = demo.assignment.teacher.name
     
     # Create notification
-    Notification.create_notification(
+    notification = Notification.create_notification(
         title=f"Demo Completed: {student_name}",
         message=f"The demo for {student_name} with {teacher_name} has been marked as completed. Please provide feedback.",
         notification_type="demo_completed",
         related_id=demo.id
     )
+    from app import socketio
+    socketio.emit('new_notification', {
+        'id': notification.id,
+        'title': notification.title,
+        'message': notification.message,
+        'type': notification.notification_type,
+        'is_urgent': notification.is_urgent,
+        'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M') if notification.created_at else ''
+    })
     
     db.session.commit()
     flash('Demo marked as completed!', 'success')
@@ -430,13 +639,22 @@ def mark_demo_cancelled(demo_id):
     teacher_name = demo.assignment.teacher.name
     
     # Create notification with urgent flag
-    Notification.create_notification(
+    notification = Notification.create_notification(
         title=f"Demo Cancelled: {student_name}",
         message=f"The demo for {student_name} with {teacher_name} has been cancelled. Please check the details and consider reassigning.",
         notification_type="demo_cancelled",
         related_id=demo.id,
         is_urgent=True
     )
+    from app import socketio
+    socketio.emit('new_notification', {
+        'id': notification.id,
+        'title': notification.title,
+        'message': notification.message,
+        'type': notification.notification_type,
+        'is_urgent': notification.is_urgent,
+        'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M') if notification.created_at else ''
+    })
     
     db.session.commit()
     flash('Demo marked as cancelled!', 'success')
@@ -480,14 +698,16 @@ def provide_feedback(demo_id):
         
         if form.student_interest.data == 'Interested':
             assignment.status = 'Converted'
-            assignment.student.status = 'Converted'
+            if assignment.student:
+                assignment.student.status = 'Converted'
         elif form.student_interest.data == 'Not Interested':
             assignment.status = 'Cancelled'
-            assignment.student.status = 'Lost'
+            if assignment.student:
+                assignment.student.status = 'Lost'
         
         # Create notification for feedback, make it urgent if feedback is negative
-        student_name = demo.assignment.student.name
-        teacher_name = demo.assignment.teacher.name
+        student_name = demo.assignment.student.name if demo.assignment and demo.assignment.student else 'Unknown Student'
+        teacher_name = demo.assignment.teacher.name if demo.assignment and demo.assignment.teacher else 'Unknown Teacher'
         is_negative = form.rating.data < 3
         
         notification_title = f"Demo Feedback: {student_name} - {'Poor' if is_negative else 'Good'}"
@@ -499,23 +719,40 @@ def provide_feedback(demo_id):
         if form.comments.data:
             notification_message += f"\nComments: {form.comments.data}"
         
-        Notification.create_notification(
+        notification = Notification.create_notification(
             title=notification_title,
             message=notification_message,
             notification_type="demo_feedback",
             related_id=demo.id,
             is_urgent=is_negative
         )
+        from app import socketio
+        socketio.emit('new_notification', {
+            'id': notification.id,
+            'title': notification.title,
+            'message': notification.message,
+            'type': notification.notification_type,
+            'is_urgent': notification.is_urgent,
+            'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M') if notification.created_at else ''
+        })
         
         # If feedback is negative (rating < 3), suggest reassignment
         if is_negative and form.student_interest.data != 'Not Interested':
-            Notification.create_notification(
+            notification2 = Notification.create_notification(
                 title=f"Reassignment Suggested: {student_name}",
                 message=f"The feedback for {student_name}'s demo with {teacher_name} was poor (Rating: {form.rating.data}/5). Consider reassigning to another teacher.",
                 notification_type="reassignment_suggested",
                 related_id=demo.id,
                 is_urgent=True
             )
+        socketio.emit('new_notification', {
+            'id': notification2.id,
+            'title': notification2.title,
+            'message': notification2.message,
+            'type': notification2.notification_type,
+            'is_urgent': notification2.is_urgent,
+            'created_at': notification2.created_at.strftime('%Y-%m-%d %H:%M') if notification2.created_at else ''
+        })
         
         db.session.commit()
         flash('Feedback submitted successfully!', 'success')
@@ -666,13 +903,22 @@ def reassign_teacher_for_demo(demo_id):
         old_assignment.status = 'Cancelled'
         
         # Create notification for both new teacher and old teacher
-        Notification.create_notification(
+        notification = Notification.create_notification(
             title=f"Teacher Reassigned: {student.name}",
             message=f"Student {student.name} has been reassigned from {old_assignment.teacher.name} to {new_teacher.name}. Reason: {form.reason.data}",
             notification_type='teacher_reassigned',
             related_id=new_assignment.id,
             is_urgent=True
         )
+        from app import socketio
+        socketio.emit('new_notification', {
+            'id': notification.id,
+            'title': notification.title,
+            'message': notification.message,
+            'type': notification.notification_type,
+            'is_urgent': notification.is_urgent,
+            'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M') if notification.created_at else ''
+        })
         
         db.session.commit()
         flash('Teacher reassigned successfully!', 'success')
@@ -687,29 +933,23 @@ def api_dashboard_stats():
     try:
         stats = generate_dashboard_stats()
         # Ensure all the data is JSON serializable
-        for key, value in stats.items():
-            if isinstance(value, dict):
-                # Ensure all dictionary values are JSON serializable
-                for inner_key, inner_value in value.items():
-                    if not isinstance(inner_value, (str, int, float, bool, type(None))):
-                        stats[key][inner_key] = str(inner_value)
-            elif isinstance(value, list):
-                # Ensure all list elements are JSON serializable
-                for i, item in enumerate(value):
-                    if isinstance(item, dict):
-                        for item_key, item_value in item.items():
-                            if not isinstance(item_value, (str, int, float, bool, type(None))):
-                                stats[key][i][item_key] = str(item_value)
-                    elif not isinstance(item, (str, int, float, bool, type(None))):
-                        stats[key][i] = str(item)
-            elif not isinstance(value, (str, int, float, bool, type(None))):
-                stats[key] = str(value)
+        def make_serializable(obj):
+            if isinstance(obj, dict):
+                return {k: make_serializable(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [make_serializable(i) for i in obj]
+            elif isinstance(obj, (str, int, float, bool, type(None))):
+                return obj
+            else:
+                return str(obj)
+        
+        stats = make_serializable(stats)
         
         return jsonify(stats)
     except Exception as e:
         # Log the error and return a valid JSON response with error information
         error_msg = f"Error in dashboard stats API: {str(e)}"
-        print(error_msg)
+        app.logger.error(error_msg)
         return jsonify({
             'error': error_msg,
             'status': 'error',
@@ -720,6 +960,70 @@ def api_dashboard_stats():
             'trend_leads': [0, 0, 0, 0, 0, 0],
             'trend_conversions': [0, 0, 0, 0, 0, 0]
         })
+
+# New API endpoints for chats under lead, assignment, and demo statuses
+@app.route('/api/dashboard/chats/lead')
+@login_required
+def api_dashboard_chats_lead():
+    try:
+        # Fetch recent communications related to leads
+        chats = Communication.query.filter(Communication.student_id.isnot(None)).order_by(Communication.created_at.desc()).limit(10).all()
+        chat_list = []
+        for chat in chats:
+            chat_list.append({
+                'id': chat.id,
+                'subject': chat.subject,
+                'content': chat.content,
+                'recipient_name': chat.recipient_name,
+                'created_at': chat.created_at.strftime('%Y-%m-%d %H:%M') if chat.created_at else ''
+            })
+        app.logger.info(f"Fetched {len(chat_list)} lead chats successfully")
+        return jsonify({'chats': chat_list})
+    except Exception as e:
+        app.logger.error(f"Error fetching lead chats: {str(e)}", exc_info=True)
+        return jsonify({'chats': [], 'error': str(e)}), 500
+
+@app.route('/api/dashboard/chats/assignment')
+@login_required
+def api_dashboard_chats_assignment():
+    try:
+        # Fetch recent communications related to assignments
+        chats = Communication.query.filter(Communication.type == 'assignment').order_by(Communication.created_at.desc()).limit(10).all()
+        chat_list = []
+        for chat in chats:
+            chat_list.append({
+                'id': chat.id,
+                'subject': chat.subject,
+                'content': chat.content,
+                'recipient_name': chat.recipient_name,
+                'created_at': chat.created_at.strftime('%Y-%m-%d %H:%M') if chat.created_at else ''
+            })
+        app.logger.info(f"Fetched {len(chat_list)} assignment chats successfully")
+        return jsonify({'chats': chat_list})
+    except Exception as e:
+        app.logger.error(f"Error fetching assignment chats: {str(e)}", exc_info=True)
+        return jsonify({'chats': [], 'error': str(e)}), 500
+
+@app.route('/api/dashboard/chats/demo')
+@login_required
+def api_dashboard_chats_demo():
+    try:
+        # Fetch recent communications related to demos
+        chats = Communication.query.filter(Communication.type == 'demo').order_by(Communication.created_at.desc()).limit(10).all()
+        chat_list = []
+        for chat in chats:
+            chat_list.append({
+                'id': chat.id,
+                'subject': chat.subject,
+                'content': chat.content,
+                'recipient_name': chat.recipient_name,
+                'created_at': chat.created_at.strftime('%Y-%m-%d %H:%M') if chat.created_at else ''
+            })
+        app.logger.info(f"Fetched {len(chat_list)} demo chats successfully")
+        return jsonify({'chats': chat_list})
+    except Exception as e:
+        app.logger.error(f"Error fetching demo chats: {str(e)}", exc_info=True)
+        return jsonify({'chats': [], 'error': str(e)}), 500
 
 # Communication Templates routes
 @app.route('/communication-templates')

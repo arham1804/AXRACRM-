@@ -68,11 +68,33 @@
                                                     {{ subjects|join(', ') }}
                                                 {% endif %}
                                             </small>
+                                            <small class="d-block mt-1">
+                                                Phone: {{ assignment.student.phone }}
+                                                <a href="tel:{{ assignment.student.phone }}" class="btn btn-sm btn-outline-primary ms-2" title="Call {{ assignment.student.name }}">
+                                                    <i data-feather="phone" aria-hidden="true"></i>
+                                                    <span class="visually-hidden">Call</span>
+                                                </a>
+                                                <a href="https://wa.me/{{ assignment.student.phone | replace(' ', '') }}" target="_blank" class="btn btn-sm btn-outline-success ms-1" title="WhatsApp {{ assignment.student.name }}">
+                                                    <i data-feather="message-circle" aria-hidden="true"></i>
+                                                    <span class="visually-hidden">WhatsApp</span>
+                                                </a>
+                                            </small>
                                         </td>
                                         <td>{{ assignment.teacher.name }}</td>
                                         <td>
                                             <small class="d-block">ID: {{ assignment.teacher.teacher_id }}</small>
-                                            <small class="d-block">Phone: {{ assignment.teacher.phone }}</small>
+                                            <small class="d-block">
+                                                Phone: {{ assignment.teacher.phone }}
+                                                <a href="tel:{{ assignment.teacher.phone }}" class="btn btn-sm btn-outline-primary ms-2" title="Call {{ assignment.teacher.name }}">
+                                                    <i data-feather="phone" aria-hidden="true"></i>
+                                                    <span class="visually-hidden">Call</span>
+                                                </a>
+                                                <a href="https://wa.me/{{ assignment.teacher.phone | replace(' ', '') }}" target="_blank" class="btn btn-sm btn-outline-success ms-1" title="WhatsApp {{ assignment.teacher.name }}">
+                                                    <i data-feather="message-circle" aria-hidden="true"></i>
+                                                    <span class="visually-hidden">WhatsApp</span>
+                                                </a>
+                                            </small>
+                                            </small>
                                             <small class="d-block">Gender: {{ assignment.teacher.gender }}</small>
                                         </td>
                                         <td>{{ assignment.assigned_date.strftime('%Y-%m-%d') }}</td>

@@ -1,27 +1,33 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid" role="main" aria-label="Dashboard main content">
     <!-- Page header -->
     <div class="d-flex justify-content-between align-items-center mb-4 page-header">
         <h1 class="h2">Dashboard</h1>
-        <button id="refreshDashboard" class="btn btn-sm btn-outline-primary">
-            <i data-feather="refresh-cw"></i> Refresh
-            <span id="loadingIndicator" class="spinner-border spinner-border-sm d-none" role="status"></span>
-        </button>
+        <div id="dashboardClock" class="text-muted small me-3" aria-live="polite" aria-atomic="true" aria-label="Current date and time"></div>
+        <div>
+            <a href="{{ url_for('weekly_summary_report') }}" class="btn btn-sm btn-success me-2" title="Download Weekly Summary Report">
+                <i data-feather="download" class="me-1"></i> Download Weekly Summary Report
+            </a>
+            <button id="refreshDashboard" class="btn btn-sm btn-outline-primary" aria-label="Refresh dashboard data" aria-live="polite" aria-busy="false">
+                <i data-feather="refresh-cw" aria-hidden="true"></i> Refresh
+                <span id="loadingIndicator" class="spinner-border spinner-border-sm visually-hidden" role="status" aria-hidden="true"></span>
+            </button>
+        </div>
     </div>
     
     <!-- Stats cards -->
     <div class="row g-4 mb-4">
         <div class="col-12 col-sm-6 col-md-3">
-            <div class="card dashboard-card h-100">
+            <div class="card dashboard-card h-100" role="region" aria-labelledby="totalLeadsLabel">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <h6 class="card-subtitle mb-2 text-muted">Total Leads</h6>
+                            <h6 id="totalLeadsLabel" class="card-subtitle mb-2 text-muted">Total Leads</h6>
                             <h2 class="card-title mb-0" id="totalLeads">{{ stats.total_leads }}</h2>
                         </div>
-                        <div class="p-2 bg-primary-subtle rounded">
+                        <div class="p-2 bg-primary-subtle rounded" aria-hidden="true">
                             <i data-feather="users" class="text-primary"></i>
                         </div>
                     </div>
@@ -30,14 +36,14 @@
         </div>
         
         <div class="col-12 col-sm-6 col-md-3">
-            <div class="card dashboard-card h-100">
+            <div class="card dashboard-card h-100" role="region" aria-labelledby="totalTeachersLabel">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <h6 class="card-subtitle mb-2 text-muted">Total Teachers</h6>
+                            <h6 id="totalTeachersLabel" class="card-subtitle mb-2 text-muted">Total Teachers</h6>
                             <h2 class="card-title mb-0" id="totalTeachers">{{ stats.total_teachers }}</h2>
                         </div>
-                        <div class="p-2 bg-success-subtle rounded">
+                        <div class="p-2 bg-success-subtle rounded" aria-hidden="true">
                             <i data-feather="user-check" class="text-success"></i>
                         </div>
                     </div>
@@ -46,14 +52,14 @@
         </div>
         
         <div class="col-12 col-sm-6 col-md-3">
-            <div class="card dashboard-card h-100">
+            <div class="card dashboard-card h-100" role="region" aria-labelledby="totalAssignmentsLabel">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <h6 class="card-subtitle mb-2 text-muted">Assignments</h6>
+                            <h6 id="totalAssignmentsLabel" class="card-subtitle mb-2 text-muted">Assignments</h6>
                             <h2 class="card-title mb-0" id="totalAssignments">{{ stats.total_assignments }}</h2>
                         </div>
-                        <div class="p-2 bg-warning-subtle rounded">
+                        <div class="p-2 bg-warning-subtle rounded" aria-hidden="true">
                             <i data-feather="clipboard" class="text-warning"></i>
                         </div>
                     </div>
@@ -62,14 +68,14 @@
         </div>
         
         <div class="col-12 col-sm-6 col-md-3">
-            <div class="card dashboard-card h-100">
+            <div class="card dashboard-card h-100" role="region" aria-labelledby="totalDemosLabel">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <h6 class="card-subtitle mb-2 text-muted">Demo Sessions</h6>
+                            <h6 id="totalDemosLabel" class="card-subtitle mb-2 text-muted">Demo Sessions</h6>
                             <h2 class="card-title mb-0" id="totalDemos">{{ stats.total_demos }}</h2>
                         </div>
-                        <div class="p-2 bg-info-subtle rounded">
+                        <div class="p-2 bg-info-subtle rounded" aria-hidden="true">
                             <i data-feather="calendar" class="text-info"></i>
                         </div>
                     </div>
@@ -80,64 +86,152 @@
     
     <!-- Conversion rates cards -->
     <div class="row g-4 mb-4">
+        <!-- Lead to Demo Conversion Card -->
         <div class="col-md-6">
-            <div class="card dashboard-card h-100">
+            <div class="card dashboard-card h-100" role="region" aria-labelledby="leadConversionRateLabel">
                 <div class="card-body">
-                    <h5 class="card-title">Lead to Demo Conversion</h5>
-                    <div class="d-flex align-items-center">
-                        <h1 class="display-4 mb-0 me-2" id="leadConversionRate">{{ stats.lead_to_demo_rate }}</h1>
+                    <h5 id="leadConversionRateLabel" class="card-title">Lead to Demo Conversion</h5>
+                    <div class="d-flex align-items-center" aria-label="Lead to Demo Conversion Rate">
+                        <h1 class="display-4 mb-0 me-2" id="leadConversionRate" title="Lead to Demo Conversion Rate">
+                            {%- if stats.lead_to_demo_rate is not none -%}
+                                {{ '%.1f'|format(stats.lead_to_demo_rate) }}
+                            {%- else -%}
+                                N/A
+                            {%- endif -%}
+                        </h1>
                         <span>%</span>
+                    </div>
+                    <div class="progress mt-2" role="progressbar" aria-label="Lead to Demo Conversion Progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ stats.lead_to_demo_rate|default(0) }}" title="Progress bar showing lead to demo conversion rate">
+<div id="leadConversionProgress" class="progress-bar bg-primary" style="width: {{ stats.lead_to_demo_rate|default(0) }}%">&nbsp;</div>
                     </div>
                     <p class="card-text text-muted">Percentage of leads that result in a demo session</p>
                 </div>
             </div>
         </div>
         
+        <!-- Demo to Tuition Conversion Card -->
         <div class="col-md-6">
-            <div class="card dashboard-card h-100">
+            <div class="card dashboard-card h-100" role="region" aria-labelledby="demoConversionRateLabel">
                 <div class="card-body">
-                    <h5 class="card-title">Demo to Tuition Conversion</h5>
-                    <div class="d-flex align-items-center">
-                        <h1 class="display-4 mb-0 me-2" id="demoConversionRate">{{ stats.demo_to_conversion_rate }}</h1>
+                    <h5 id="demoConversionRateLabel" class="card-title">Demo to Tuition Conversion</h5>
+                    <div class="d-flex align-items-center" aria-label="Demo to Tuition Conversion Rate">
+                        <h1 class="display-4 mb-0 me-2" id="demoConversionRate" title="Demo to Tuition Conversion Rate">
+                            {%- if stats.demo_to_conversion_rate is not none -%}
+                                {{ '%.1f'|format(stats.demo_to_conversion_rate) }}
+                            {%- else -%}
+                                N/A
+                            {%- endif -%}
+                        </h1>
                         <span>%</span>
+                    </div>
+                    <div class="progress mt-2" role="progressbar" aria-label="Demo to Tuition Conversion Progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ stats.demo_to_conversion_rate|default(0) }}" title="Progress bar showing demo to tuition conversion rate">
+<div id="demoConversionProgress" 
+     class="progress-bar bg-success" 
+     style="width: {{ stats.demo_to_conversion_rate|default(0) }}%" 
+     aria-valuenow="{{ stats.demo_to_conversion_rate|default(0) }}" 
+     aria-valuemin="0" 
+     aria-valuemax="100"></div>
                     </div>
                     <p class="card-text text-muted">Percentage of demos that convert to tuition assignments</p>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- New Axra Funnel and Service Overview cards -->
+    <div class="row g-4 mb-4">
+        <!-- Axra Funnel Stats -->
+        <div class="col-md-6">
+            <div class="card dashboard-card h-100" role="region" aria-labelledby="axraFunnelLabel">
+                <div class="card-body">
+                    <h5 id="axraFunnelLabel" class="card-title">Axra Funnel</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Call to Lead Rate
+                            <span id="callToLeadRate" class="badge bg-primary rounded-pill">{{ stats.call_to_lead_rate or 0 }}%</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Lead to Demo Rate
+                            <span id="leadToDemoRate" class="badge bg-primary rounded-pill">{{ stats.lead_to_demo_rate or 0 }}%</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Demo to Conversion Rate
+                            <span id="demoToConversionRate" class="badge bg-primary rounded-pill">{{ stats.demo_to_conversion_rate or 0 }}%</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Conversion to Payment Rate
+                            <span id="conversionToPaymentRate" class="badge bg-primary rounded-pill">{{ stats.conversion_to_payment_rate or 0 }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Service Overview Stats -->
+        <div class="col-md-6">
+            <div class="card dashboard-card h-100" role="region" aria-labelledby="serviceOverviewLabel">
+                <div class="card-body">
+                    <h5 id="serviceOverviewLabel" class="card-title">Service Overview</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Sales Overview
+                            <span id="salesOverview" class="badge bg-success rounded-pill">{{ stats.sales_overview or 0 }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Total Sale
+                            <span id="totalSale" class="badge bg-success rounded-pill">{{ stats.total_sale or 0 }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Demo Conversion Avg Time (hrs)
+                            <span id="demoConversionAvgTime" class="badge bg-success rounded-pill">{{ stats.demo_conversion_avg_time or 0 }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Avg Fees per Conversion
+                            <span id="avgFeesPerConversion" class="badge bg-success rounded-pill">{{ stats.avg_fees_per_conversion or 0 }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
     
     <!-- Charts -->
-    <div class="row g-4 mb-4">
-        <div class="col-md-4">
-            <div class="card dashboard-card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">Lead Status</h5>
-                    <div class="chart-container">
-                        <canvas id="leadStatusChart" data-stats="{{ stats.lead_status|tojson|safe }}"></canvas>
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="card dashboard-card h-100" role="region" aria-labelledby="leadStatusChartLabel">
+                    <div class="card-body">
+                        <h5 id="leadStatusChartLabel" class="card-title">Lead Status</h5>
+                        <div class="chart-container">
+                            <canvas id="leadStatusChart" data-stats="{{ stats.lead_status|tojson|safe }}" aria-describedby="leadStatusChartDesc"></canvas>
+                        </div>
+                        <div id="leadChatsContainer" class="chat-container mt-3 p-2 bg-dark text-white rounded" style="max-height: 200px; overflow-y: auto;" aria-live="polite" aria-atomic="true" aria-relevant="additions"></div>
+                        <div id="leadStatusChartDesc" class="visually-hidden">Pie chart showing distribution of lead statuses: New, Assigned, Converted, Lost.</div>
                     </div>
+                </div>
+            </div>
+        
+        <div class="col-md-4">
+            <div class="card dashboard-card h-100" role="region" aria-labelledby="assignmentStatusChartLabel">
+                <div class="card-body">
+                    <h5 id="assignmentStatusChartLabel" class="card-title">Assignment Status</h5>
+                    <div class="chart-container">
+                        <canvas id="assignmentStatusChart" data-stats="{{ stats.assignment_status|tojson|safe }}" aria-describedby="assignmentStatusChartDesc"></canvas>
+                    </div>
+                    <div id="assignmentChatsContainer" class="chat-container mt-3 p-2 bg-dark text-white rounded chat-container-scroll" aria-live="polite" aria-atomic="true" aria-relevant="additions"></div>
+                    <div id="assignmentStatusChartDesc" class="visually-hidden">Pie chart showing distribution of assignment statuses: Pending, Demo Scheduled, Converted, Cancelled.</div>
                 </div>
             </div>
         </div>
         
         <div class="col-md-4">
-            <div class="card dashboard-card h-100">
+            <div class="card dashboard-card h-100" role="region" aria-labelledby="demoStatusChartLabel">
                 <div class="card-body">
-                    <h5 class="card-title">Assignment Status</h5>
+                    <h5 id="demoStatusChartLabel" class="card-title">Demo Status</h5>
                     <div class="chart-container">
-                        <canvas id="assignmentStatusChart" data-stats="{{ stats.assignment_status|tojson|safe }}"></canvas>
+                        <canvas id="demoStatusChart" data-stats="{{ stats.demo_status|tojson|safe }}" aria-describedby="demoStatusChartDesc"></canvas>
                     </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-4">
-            <div class="card dashboard-card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">Demo Status</h5>
-                    <div class="chart-container">
-                        <canvas id="demoStatusChart" data-stats="{{ stats.demo_status|tojson|safe }}"></canvas>
-                    </div>
+                    <div id="demoChatsContainer" class="chat-container mt-3 p-2 bg-dark text-white rounded chat-container-scroll" aria-live="polite" aria-atomic="true" aria-relevant="additions"></div>
+                    <div id="demoStatusChartDesc" class="visually-hidden">Pie chart showing distribution of demo statuses: Scheduled, Completed, Cancelled.</div>
                 </div>
             </div>
         </div>
@@ -146,15 +240,17 @@
     <!-- Monthly trends chart -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card dashboard-card">
+            <div class="card dashboard-card" role="region" aria-labelledby="monthlyTrendsChartLabel">
                 <div class="card-body">
-                    <h5 class="card-title">Monthly Trends</h5>
+                    <h5 id="monthlyTrendsChartLabel" class="card-title">Monthly Trends</h5>
                     <div class="chart-container">
                         <canvas id="monthlyTrendsChart" 
                                 data-months="{{ stats.trend_months|tojson|safe }}"
                                 data-leads="{{ stats.trend_leads|tojson|safe }}"
-                                data-conversions="{{ stats.trend_conversions|tojson|safe }}"></canvas>
+                                data-conversions="{{ stats.trend_conversions|tojson|safe }}"
+                                aria-describedby="monthlyTrendsChartDesc"></canvas>
                     </div>
+                    <div id="monthlyTrendsChartDesc" class="visually-hidden">Line chart showing monthly lead and conversion trends.</div>
                 </div>
             </div>
         </div>
@@ -164,21 +260,21 @@
     <div class="row g-4">
         <!-- Recent leads -->
         <div class="col-md-6">
-            <div class="card dashboard-card h-100">
+            <div class="card dashboard-card h-100" role="region" aria-labelledby="recentLeadsLabel">
                 <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Recent Leads</h5>
+                    <h5 id="recentLeadsLabel" class="card-title mb-0">Recent Leads</h5>
                     <div id="recentLeadsExport"></div>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover table-sm mb-0" id="recentLeadsTable">
+                        <table class="table table-hover table-sm mb-0" id="recentLeadsTable" aria-describedby="recentLeadsDesc">
                             <thead>
                                 <tr>
-                                    <th>Name</th>
-                                    <th>Area</th>
-                                    <th>Class</th>
-                                    <th>Date</th>
-                                    <th>Status</th>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Area</th>
+                                    <th scope="col">Class</th>
+                                    <th scope="col">Date</th>
+                                    <th scope="col">Status</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -189,7 +285,7 @@
                                         <td>{{ lead.area }}</td>
                                         <td>{{ lead.class_level }}</td>
                                         <td>{{ lead.created_at }}</td>
-                                        <td><span class="badge status-{{ lead.status|lower }}">{{ lead.status }}</span></td>
+                                        <td><span class="badge status-{{ lead.status|lower }} status-badge">{{ lead.status }}</span></td>
                                     </tr>
                                     {% endfor %}
                                 {% else %}
@@ -209,20 +305,20 @@
         
         <!-- Recent demos -->
         <div class="col-md-6">
-            <div class="card dashboard-card h-100">
+            <div class="card dashboard-card h-100" role="region" aria-labelledby="recentDemosLabel">
                 <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Recent Demos</h5>
+                    <h5 id="recentDemosLabel" class="card-title mb-0">Recent Demos</h5>
                     <div id="recentDemosExport"></div>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover table-sm mb-0" id="recentDemosTable">
+                        <table class="table table-hover table-sm mb-0" id="recentDemosTable" aria-describedby="recentDemosDesc">
                             <thead>
                                 <tr>
-                                    <th>Student</th>
-                                    <th>Teacher</th>
-                                    <th>Date & Time</th>
-                                    <th>Status</th>
+                                    <th scope="col">Student</th>
+                                    <th scope="col">Teacher</th>
+                                    <th scope="col">Date &amp; Time</th>
+                                    <th scope="col">Status</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -232,7 +328,7 @@
                                         <td>{{ demo.student_name }}</td>
                                         <td>{{ demo.teacher_name }}</td>
                                         <td>{{ demo.scheduled_date }}</td>
-                                        <td><span class="badge status-{{ demo.status|lower }}">{{ demo.status }}</span></td>
+                                        <td><span class="badge status-{{ demo.status|lower }} status-badge">{{ demo.status }}</span></td>
                                     </tr>
                                     {% endfor %}
                                 {% else %}
@@ -252,20 +348,20 @@
         
         <!-- Top teachers -->
         <div class="col-12">
-            <div class="card dashboard-card">
+            <div class="card dashboard-card" role="region" aria-labelledby="topTeachersLabel">
                 <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Top Performing Teachers</h5>
+                    <h5 id="topTeachersLabel" class="card-title mb-0">Top Performing Teachers</h5>
                     <div id="topTeachersExport"></div>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover table-sm mb-0" id="topTeachersTable">
+                        <table class="table table-hover table-sm mb-0" id="topTeachersTable" aria-describedby="topTeachersDesc">
                             <thead>
                                 <tr>
-                                    <th>Teacher Name</th>
-                                    <th>Total Assignments</th>
-                                    <th>Conversions</th>
-                                    <th>Conversion Rate</th>
+                                    <th scope="col">Teacher Name</th>
+                                    <th scope="col">Total Assignments</th>
+                                    <th scope="col">Conversions</th>
+                                    <th scope="col">Conversion Rate</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -300,29 +396,19 @@
 <!-- Chart.js library - load first -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 
-<!-- Export utility script -->
-<script src="{{ url_for('static', filename='js/exportUtility.js') }}"></script>
-
 <!-- Dashboard scripts -->
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 
-<!-- Initialize charts after DOM is fully loaded -->
+<!-- Feather icons library -->
+<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+
+<!-- Initialize charts and icons after DOM is fully loaded -->
 <script>
     $(document).ready(function() {
-        // Simple one-time initialization
-        if (!window.dashboardInitialized) {
-            window.dashboardInitialized = true;
-            
-            try {
-                console.log('Initializing dashboard directly...');
-                if (typeof initializePage === 'function') {
-                    initializePage();
-                }
-            } catch (error) {
-                console.error('Error initializing dashboard:', error);
-            }
+        // Replace feather icons
+        if (typeof feather !== 'undefined') {
+            feather.replace();
         }
-
     });
 </script>
 {% endblock %}

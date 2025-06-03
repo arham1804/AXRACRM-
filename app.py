@@ -7,6 +7,8 @@ from sqlalchemy.orm import DeclarativeBase
 from flask_login import LoginManager
 from werkzeug.middleware.proxy_fix import ProxyFix
 
+from flask_socketio import SocketIO
+
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 
@@ -31,6 +33,9 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # Initialize the database
 db.init_app(app)
+
+# Initialize SocketIO
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Configure login manager
 login_manager = LoginManager()
@@ -67,4 +72,4 @@ def load_user(user_id):
 from routes import *
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    socketio.run(app, host="0.0.0.0", port=5000, debug=True)

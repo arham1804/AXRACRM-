@@ -56,11 +56,31 @@
                                     <tr>
                                         <td>{{ demo.id }}</td>
                                         <td>
-                                            <div>{{ demo.assignment.student.name }}</div>
+                                            <div>
+                                                {{ demo.assignment.student.name }}
+                                                <a href="tel:{{ demo.assignment.student.phone }}" class="btn btn-sm btn-outline-primary ms-2" title="Call {{ demo.assignment.student.name }}">
+                                                    <i data-feather="phone" aria-hidden="true"></i>
+                                                    <span class="visually-hidden">Call</span>
+                                                </a>
+                                                <a href="https://wa.me/{{ demo.assignment.student.phone | replace(' ', '') }}" target="_blank" class="btn btn-sm btn-outline-success ms-1" title="WhatsApp {{ demo.assignment.student.name }}">
+                                                    <i data-feather="message-circle" aria-hidden="true"></i>
+                                                    <span class="visually-hidden">WhatsApp</span>
+                                                </a>
+                                            </div>
                                             <small class="text-muted">{{ demo.assignment.student.lead_id }}</small>
                                         </td>
                                         <td>
-                                            <div>{{ demo.assignment.teacher.name }}</div>
+                                            <div>
+                                                {{ demo.assignment.teacher.name }}
+                                                <a href="tel:{{ demo.assignment.teacher.phone }}" class="btn btn-sm btn-outline-primary ms-2" title="Call {{ demo.assignment.teacher.name }}">
+                                                    <i data-feather="phone" aria-hidden="true"></i>
+                                                    <span class="visually-hidden">Call</span>
+                                                </a>
+                                                <a href="https://wa.me/{{ demo.assignment.teacher.phone | replace(' ', '') }}" target="_blank" class="btn btn-sm btn-outline-success ms-1" title="WhatsApp {{ demo.assignment.teacher.name }}">
+                                                    <i data-feather="message-circle" aria-hidden="true"></i>
+                                                    <span class="visually-hidden">WhatsApp</span>
+                                                </a>
+                                            </div>
                                             <small class="text-muted">{{ demo.assignment.teacher.teacher_id }}</small>
                                         </td>
                                         <td>

@@ -18,45 +18,49 @@
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <h5>Student Details</h5>
-                            <table class="table table-sm">
-                                <tr>
-                                    <th style="width: 150px;">Name:</th>
-                                    <td>{{ demo.assignment.student.name }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Class:</th>
-                                    <td>{{ demo.assignment.student.class_level }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Area:</th>
-                                    <td>{{ demo.assignment.student.area }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Subjects:</th>
-                                    <td>{{ ', '.join(demo.assignment.student.get_subjects_list()) }}</td>
-                                </tr>
-                            </table>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <tr>
+                                        <th style="width: 150px;">Name:</th>
+                                        <td>{{ demo.assignment.student.name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Class:</th>
+                                        <td>{{ demo.assignment.student.class_level }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Area:</th>
+                                        <td>{{ demo.assignment.student.area }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Subjects:</th>
+                                        <td>{{ ', '.join(demo.assignment.student.get_subjects_list()) }}</td>
+                                    </tr>
+                                </table>
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <h5>Current Teacher</h5>
-                            <table class="table table-sm">
-                                <tr>
-                                    <th style="width: 150px;">Name:</th>
-                                    <td>{{ demo.assignment.teacher.name }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Teacher ID:</th>
-                                    <td>{{ demo.assignment.teacher.teacher_id }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Qualification:</th>
-                                    <td>{{ demo.assignment.teacher.qualification }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Experience:</th>
-                                    <td>{{ demo.assignment.teacher.teaching_experience }} years</td>
-                                </tr>
-                            </table>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <tr>
+                                        <th style="width: 150px;">Name:</th>
+                                        <td>{{ demo.assignment.teacher.name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Teacher ID:</th>
+                                        <td>{{ demo.assignment.teacher.teacher_id }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Qualification:</th>
+                                        <td>{{ demo.assignment.teacher.qualification }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Experience:</th>
+                                        <td>{{ demo.assignment.teacher.teaching_experience }} years</td>
+                                    </tr>
+                                </table>
+                            </div>
                         </div>
                     </div>
                     

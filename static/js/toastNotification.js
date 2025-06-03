@@ -189,7 +189,7 @@ class ToastNotification {
             title: title,
             message: message,
             type: 'error',
-            duration: 5000 // Errors stay longer
+            duration: 8000 // Errors stay longer (increased from 5000)
         });
     }
     

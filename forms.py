@@ -72,6 +72,8 @@ class StudentLeadForm(FlaskForm):
                                 validators=[Optional()])
     submit = SubmitField('Save Lead')
 
+from flask_wtf.file import FileField, FileAllowed
+
 class TeacherForm(FlaskForm):
     name = StringField('Full Name', validators=[DataRequired(), Length(min=2, max=100)])
     phone = StringField('Phone Number', validators=[DataRequired(), Length(min=10, max=15)])
@@ -131,6 +133,13 @@ class TeacherForm(FlaskForm):
     teaching_experience = IntegerField('Teaching Experience (Years)', validators=[Optional(), NumberRange(min=0, max=50)])
     teaching_experience_details = TextAreaField('Experience Details', validators=[Optional()])
     submit = SubmitField('Save Teacher')
+
+class TeacherBulkUploadForm(FlaskForm):
+    file = FileField('Upload Teacher File (CSV or Excel)', validators=[
+        FileAllowed(['csv', 'xls', 'xlsx'], 'CSV and Excel files only!'),
+        DataRequired()
+    ])
+    submit = SubmitField('Upload')
 
 class AssignTeacherForm(FlaskForm):
     teacher_id = SelectField('Select Teacher', coerce=int, validators=[DataRequired()])
