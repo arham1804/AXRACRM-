@@ -8,3 +8,4 @@ flask-wtf>=1.2.2
 twilio>=9.5.2
 sendgrid>=6.11.0
 flask_socketio
+python-dotenv
