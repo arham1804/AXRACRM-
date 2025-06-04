@@ -6,8 +6,11 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from flask_login import LoginManager
 from werkzeug.middleware.proxy_fix import ProxyFix
-
+from dotenv import load_dotenv
 from flask_socketio import SocketIO
+
+# Load environment variables from .env file (optional but recommended)
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -15,7 +18,7 @@ logging.basicConfig(level=logging.DEBUG)
 class Base(DeclarativeBase):
     pass
 
-# Initialize SQLAlchemy
+# Initialize SQLAlchemy with model_class Base
 db = SQLAlchemy(model_class=Base)
 
 # Create Flask app
@@ -23,15 +26,21 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev_secret_key")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
-# Configure database (SQLite)
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///axra_tutor.db")
+# Stability configs
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
 }
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-# Initialize the database
+# Correctly set SQLALCHEMY_DATABASE_URI from environment variable with fallback
+default_db_uri = (
+    "postgresql://AXRATUTOR_owner:npg_Bb4qNCFDTXc1@"
+    "ep-frosty-darkness-a1sjz40x-pooler.ap-southeast-1.aws.neon.tech/"
+    "AXRATUTOR?sslmode=require&options=endpoint%3Dep-frosty-darkness-a1sjz40x-pooler"
+)
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", default_db_uri)
+
+# Initialize SQLAlchemy with app
 db.init_app(app)
 
 # Initialize SocketIO

@@ -217,7 +217,9 @@ def generate_dashboard_stats() -> Dict[str, Any]:
 
     # Demo conversion average time (average time from demo scheduled to demo completed)
     demo_times = db.session.query(
-        func.avg(func.julianday(Demo.created_at) - func.julianday(Demo.scheduled_date))
+        func.avg(
+            (func.extract('epoch', Demo.created_at) - func.extract('epoch', Demo.scheduled_date)) / 86400.0
+        )
     ).filter(Demo.status == 'Completed').scalar()
     if demo_times is not None:
         # Convert days to hours
